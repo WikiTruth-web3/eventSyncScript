@@ -103,7 +103,6 @@ const handleOrderAmountWithdraw = async (
 
     if (!listRaw || !token || !userId || !amount || fundsTypeRaw === undefined) return
 
-    // list 是 uint256[] 数组
     const boxList = Array.isArray(listRaw)
         ? listRaw.map(item => String(item))
         : [String(listRaw)]

@@ -144,7 +144,7 @@ const handleBoxUpdate = async (
             }
             break
 
-        // ... 其他事件处理
+        // ... others
     }
 
     if (Object.keys(updates).length > 0) {
