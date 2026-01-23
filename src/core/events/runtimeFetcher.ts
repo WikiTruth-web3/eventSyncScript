@@ -1,7 +1,6 @@
 import { ContractName } from '../../contractsConfig/types'
 import { useRuntimeContractEvents } from '../../oasisQuery/app/hooks/useRuntimeContractEvents'
 import type { RuntimeContractEventSource, EventFetchResult } from './types'
-import { EVENT_QUERY_CONFIG } from '../../config/sync'
 
 export async function fetchRuntimeContractEvents<TArgs = Record<string, unknown>>(
   source: RuntimeContractEventSource,
@@ -11,9 +10,9 @@ export async function fetchRuntimeContractEvents<TArgs = Record<string, unknown>
     contract,
     eventNames,
     eventFilters,
-    limit = EVENT_QUERY_CONFIG.DEFAULT_LIMIT,
+    limit = 500,
     offset = 0,
-    batchSize = EVENT_QUERY_CONFIG.DEFAULT_BATCH_SIZE,
+    batchSize = 200,
     maxPages,
     fromRound,
     toRound,

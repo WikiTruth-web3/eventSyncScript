@@ -20,7 +20,7 @@ async function main() {
 
     const writeToSupabase = false
     const restart = true
-    const isUpdateSyncBlock = true
+    const isUpdateSyncBlock = false
 
     // Get all contracts sync data from Supabase
     const default_start_block = 14458354
