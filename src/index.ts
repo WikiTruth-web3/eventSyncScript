@@ -15,11 +15,11 @@ export const CONSTANTS = {
 async function main() {
   try {
 
-    console.log('🌐 Not syncing events...')
-    return;
+    // console.log('🌐 Not syncing events...')
+    // return;
 
     const writeToSupabase = true
-    const restart = false
+    const restart = true
     const isUpdateSyncBlock = true
 
     // Get all contracts sync data from Supabase

@@ -36,9 +36,9 @@ const handleBoxListed = async (
     }
 
     // Determine listed_mode based on current status
-    // If status is 'Selling', then listed_mode is 'Selling'
-    // If status is 'Auctioning', then listed_mode is 'Auctioning'
-    // Here we assume that when BoxListed event is triggered, status has already been updated to 'Selling' or 'Auctioning' via BoxStatusChanged
+    // If status is 1 (Selling), then listed_mode is 1
+    // If status is 2 (Auctioning), then listed_mode is 2
+    // Here we assume that when BoxListed event is triggered, status has already been updated to 1 or 2 via BoxStatusChanged
     // If needed, can query current status here
 
     const { error } = await supabase

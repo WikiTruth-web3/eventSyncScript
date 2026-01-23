@@ -52,6 +52,7 @@ export const supabase = createSupabaseClient();
  * Insert and Update type definitions
  * 
  */
+
 export interface Database {
     public: {
         Tables: {
@@ -72,12 +73,11 @@ export interface Database {
                     seller_id: string | null;
                     buyer_id: string | null;
                     completer_id: string | null;
-                    status: string;
-                    listed_mode: string | null;
+                    status: number;
+                    listed_mode: number | null;
                     accepted_token: string | null;
                     refund_permit: boolean | null;
                     create_timestamp: string;
-                    // sell_timestamp: string | null;
                     publish_timestamp: string | null;
                     listed_timestamp: string | null;
                     purchase_timestamp: string | null;
@@ -101,12 +101,11 @@ export interface Database {
                     seller_id?: string | null;
                     buyer_id?: string | null;
                     completer_id?: string | null;
-                    status: string;
-                    listed_mode?: string | null;
+                    status: number;
+                    listed_mode?: number | null;
                     accepted_token?: string | null;
                     refund_permit?: boolean | null;
                     create_timestamp: string;
-                    // sell_timestamp?: string | null;
                     publish_timestamp?: string | null;
                     listed_timestamp?: string | null;
                     purchase_timestamp?: string | null;
@@ -130,12 +129,11 @@ export interface Database {
                     seller_id?: string | null;
                     buyer_id?: string | null;
                     completer_id?: string | null;
-                    status?: string;
-                    listed_mode?: string | null;
+                    status?: number;
+                    listed_mode?: number | null;
                     accepted_token?: string | null;
                     refund_permit?: boolean | null;
                     create_timestamp?: string;
-                    sell_timestamp?: string | null;
                     publish_timestamp?: string | null;
                     listed_timestamp?: string | null;
                     purchase_timestamp?: string | null;
@@ -391,29 +389,29 @@ export interface Database {
                     layer: 'sapphire';
                     id: string;
                     total_supply: string;
-                    storing_supply: string;
-                    selling_supply: string;
-                    auctioning_supply: string;
-                    paid_supply: string;
-                    refunding_supply: string;
-                    in_secrecy_supply: string;
-                    published_supply: string;
-                    blacklisted_supply: string;
+                    status_0_supply: string;
+                    status_1_supply: string;
+                    status_2_supply: string;
+                    status_3_supply: string;
+                    status_4_supply: string;
+                    status_5_supply: string;
+                    status_6_supply: string;
+                    status_7_supply: string;
                 };
                 // ⚠️ Do not allow manual insertion: This table is managed by triggers
-                // Statistical data changes should be triggered by boxes table insert and status update
+                // Statistical data changes should be triggered by inserting into boxes table and updating status
                 Insert: never;
                 //  TODO  In tests, do not use this update, it will be removed in production
                 Update: {
                     total_supply?: string;
-                    storing_supply?: string;
-                    selling_supply?: string;
-                    auctioning_supply?: string;
-                    paid_supply?: string;
-                    refunding_supply?: string;
-                    in_secrecy_supply?: string;
-                    published_supply?: string;
-                    blacklisted_supply?: string;
+                    status_0_supply?: string;
+                    status_1_supply?: string;
+                    status_2_supply?: string;
+                    status_3_supply?: string;
+                    status_4_supply?: string;
+                    status_5_supply?: string;
+                    status_6_supply?: string;
+                    status_7_supply?: string;
                     network?: 'testnet' | 'mainnet';
                     layer?: 'sapphire';
                     id?: string;
@@ -481,6 +479,8 @@ export interface Database {
                     status_filter?: string[] | null;
                     type_of_crime_filter?: string[] | null;
                     country_filter?: string[] | null;
+                    accepted_token_filter?: string[] | null;
+                    listed_mode_filter?: string[] | null;
                     label_filter?: string[] | null;
                     min_price?: number | null;
                     max_price?: number | null;
@@ -500,11 +500,14 @@ export interface Database {
                     country: string | null;
                     state: string | null;
                     label: string[] | null;
-                    status: string;
+                    status: number;
+                    listed_mode: number | null;
                     price: string;
                     nft_image: string | null;
                     box_image: string | null;
+                    event_date: string | null;
                     create_timestamp: string;
+                    accepted_token: string | null;
                     relevance: number;
                 }[];
             };

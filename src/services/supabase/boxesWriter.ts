@@ -43,7 +43,8 @@ const handleBoxCreated = async (
         token_id: boxId, // PostgreSQL BIGINT can accept string-formatted numbers
         minter_id: userId,
         owner_address: '0x0000000000000000000000000000000000000000', // Default value, will be updated via Transfer event
-        status: 'Storing',
+        status: 0, // 0=Storing, 1=Selling, 2=Auctioning, 3=Paid, 4=Refunding, 5=Delaying, 6=Published, 7=Blacklisted
+        listed_mode: null, // NULL=Not Listed, 1=Selling, 2=Auctioning
         price: '0',
         deadline: '0',
         create_timestamp: createTimestamp, // Required field: creation timestamp
@@ -96,21 +97,11 @@ const handleBoxUpdate = async (
             const statusRaw = getEventArg<unknown>(event, 'status')
             if (statusRaw !== undefined && statusRaw !== null) {
                 const status = typeof statusRaw === 'bigint' ? Number(statusRaw) : Number(statusRaw)
-                const statusMap: Record<number, string> = {
-                    0: 'Storing',
-                    1: 'Selling',
-                    2: 'Auctioning',
-                    3: 'Paid',
-                    4: 'Refunding',
-                    5: 'Delaying',
-                    6: 'Published',
-                    7: 'Blacklisted',
-                }
-                updates.status = statusMap[status] || 'Storing'
-
-                if (status === 1 || status === 2) {
-                    updates.listed_mode = statusMap[status]
-                }
+                updates.status = status
+                
+                // Update listed_mode based on status: NULL=Not Listed, 1=Selling, 2=Auctioning
+                updates.listed_mode = (status === 1 || status === 2) ? status : null
+                
                 if (status === 6) {
                     updates.publish_timestamp = extractTimestamp(event)
                 }
