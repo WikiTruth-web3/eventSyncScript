@@ -15,8 +15,8 @@ export const CONSTANTS = {
 async function main() {
   try {
 
-    // console.log('🌐 Not syncing events...')
-    // return;
+    console.log('🌐 Not syncing events...')
+    return;
 
     const writeToSupabase = true
     const restart = true
