@@ -102,7 +102,7 @@ const handleBoxUpdate = async (
                     2: 'Auctioning',
                     3: 'Paid',
                     4: 'Refunding',
-                    5: 'InSecrecy',
+                    5: 'Delaying',
                     6: 'Published',
                     7: 'Blacklisted',
                 }
