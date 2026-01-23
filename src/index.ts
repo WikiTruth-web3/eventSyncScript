@@ -15,20 +15,21 @@ export const CONSTANTS = {
 async function main() {
   try {
 
-    console.log('🌐 Not syncing events...')
-    return;
+    // console.log('🌐 Not syncing events...')
+    // return;
 
-    const writeToSupabase = true
+    const writeToSupabase = false
     const restart = true
     const isUpdateSyncBlock = true
 
     // Get all contracts sync data from Supabase
-    const allSyncData = await getAllContractsSyncData(DEFAULT_SCOPE)
     const default_start_block = 14458354
+
+    const allSyncData = await getAllContractsSyncData(DEFAULT_SCOPE)
 
     const truthBoxLastBlock = restart
       ? default_start_block
-      : allSyncData[ContractName.TRUTH_BOX]?.last_synced_block
+      : allSyncData[ContractName.TRUTH_BOX]?.last_synced_block || default_start_block
     await fetchTruthBoxEvents(
       DEFAULT_SCOPE,
       truthBoxLastBlock,
@@ -38,7 +39,7 @@ async function main() {
 
     const truthNFTLastBlock = restart
       ? default_start_block
-      : allSyncData[ContractName.TRUTH_NFT]?.last_synced_block
+      : allSyncData[ContractName.TRUTH_NFT]?.last_synced_block || default_start_block
     await fetchTruthNFTEvents(
       DEFAULT_SCOPE,
       truthNFTLastBlock,
@@ -48,7 +49,7 @@ async function main() {
 
     const exchangeLastBlock = restart
       ? default_start_block
-      : allSyncData[ContractName.EXCHANGE]?.last_synced_block
+      : allSyncData[ContractName.EXCHANGE]?.last_synced_block || default_start_block
     await fetchExchangeEvents(
       DEFAULT_SCOPE,
       exchangeLastBlock,
@@ -58,7 +59,7 @@ async function main() {
 
     const fundManagerLastBlock = restart
       ? default_start_block
-      : allSyncData[ContractName.FUND_MANAGER]?.last_synced_block
+      : allSyncData[ContractName.FUND_MANAGER]?.last_synced_block || default_start_block
     await fetchFundManagerEvents(
       DEFAULT_SCOPE,
       fundManagerLastBlock,
@@ -68,7 +69,7 @@ async function main() {
 
     const userIdLastBlock = restart
       ? default_start_block
-      : allSyncData[ContractName.USER_ID]?.last_synced_block
+      : allSyncData[ContractName.USER_ID]?.last_synced_block || default_start_block
     await fetchUserIdEvents(
       DEFAULT_SCOPE,
       userIdLastBlock,

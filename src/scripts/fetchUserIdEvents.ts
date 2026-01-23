@@ -1,7 +1,7 @@
 import { ContractName } from '../contractsConfig/types'
 import type { RuntimeScope } from '../oasisQuery/types/searchScope'
 import { syncRuntimeContractEvents } from '../core/sync'
-import { DEFAULT_SCOPE, EVENT_QUERY_CONFIG } from '../config/sync'
+import { DEFAULT_SCOPE,} from '../config/sync'
 import { persistUserAddressSync } from '../services/supabase/userAddressWriter'
 import { saveEventDataToFile, shouldSaveEventDataToFile } from '../utils/saveEventDataToFile'
 import { decodeContractEvents } from '../utils/decodeEvents'
@@ -21,24 +21,18 @@ export interface FetchUserIdEventsResult {
  */
 export async function fetchUserIdEvents(
     scope: RuntimeScope = DEFAULT_SCOPE,
-    lastSyncedBlock?: number,
+    lastSyncedBlock: number,
     syncToSupabase: boolean = true,
     updateSyncBlock: boolean = true
 ): Promise<FetchUserIdEventsResult> {
     console.log(`🌐 Querying UserId events: network=${scope.network}, layer=${scope.layer}`)
 
-    const fromRoundOverride = process.env.EVENT_SYNC_FROM_BLOCK
-        ? Number(process.env.EVENT_SYNC_FROM_BLOCK)
-        : lastSyncedBlock !== undefined
-            ? lastSyncedBlock + 1
-            : undefined
-
     const syncResult = await syncRuntimeContractEvents({
         scope,
         contract: ContractName.USER_ID,
-        limit: Number(process.env.EVENT_SYNC_LIMIT ?? EVENT_QUERY_CONFIG.DEFAULT_LIMIT),
-        batchSize: Number(process.env.EVENT_SYNC_BATCH_SIZE ?? EVENT_QUERY_CONFIG.DEFAULT_BATCH_SIZE),
-        fromRound: fromRoundOverride,
+        limit: Number(process.env.EVENT_SYNC_LIMIT),
+        batchSize: Number(process.env.EVENT_SYNC_BATCH_SIZE),
+        fromRound: lastSyncedBlock,
     })
 
     // Decode events using unified decoding utility function

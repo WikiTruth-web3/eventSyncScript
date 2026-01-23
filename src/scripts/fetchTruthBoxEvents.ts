@@ -1,7 +1,7 @@
 import { ContractName } from '../contractsConfig/types'
 import type { RuntimeScope } from '../oasisQuery/types/searchScope'
 import { syncRuntimeContractEvents } from '../core/sync'
-import { DEFAULT_SCOPE, EVENT_QUERY_CONFIG } from '../config/sync'
+import { DEFAULT_SCOPE,} from '../config/sync'
 import { persistTruthBoxSync } from '../services/supabase/truthBoxWriter'
 import { saveEventDataToFile, shouldSaveEventDataToFile } from '../utils/saveEventDataToFile'
 import { decodeContractEvents } from '../utils/decodeEvents'
@@ -22,26 +22,18 @@ export interface FetchTruthBoxEventsResult {
  */
 export async function fetchTruthBoxEvents(
   scope: RuntimeScope = DEFAULT_SCOPE,
-  lastSyncedBlock?: number,
+  lastSyncedBlock: number,
   syncToSupabase: boolean = true,
   updateSyncBlock: boolean = true
 ): Promise<FetchTruthBoxEventsResult> {
   console.log(`🌐 Querying TruthBox: network=${scope.network}, layer=${scope.layer}`)
 
-  // Determine starting block height
-  // Priority: environment variable > passed lastSyncedBlock
-  const fromRoundOverride = process.env.EVENT_SYNC_FROM_BLOCK
-    ? Number(process.env.EVENT_SYNC_FROM_BLOCK)
-    : lastSyncedBlock !== undefined
-      ? lastSyncedBlock + 1 // Start querying from lastSyncedBlock + 1
-      : undefined
-
   const syncResult = await syncRuntimeContractEvents({
     scope,
     contract: ContractName.TRUTH_BOX,
-    limit: Number(process.env.EVENT_SYNC_LIMIT ?? EVENT_QUERY_CONFIG.DEFAULT_LIMIT),
-    batchSize: Number(process.env.EVENT_SYNC_BATCH_SIZE ?? EVENT_QUERY_CONFIG.DEFAULT_BATCH_SIZE),
-    fromRound: fromRoundOverride,
+    limit: Number(process.env.EVENT_SYNC_LIMIT ),
+    batchSize: Number(process.env.EVENT_SYNC_BATCH_SIZE),
+    fromRound: lastSyncedBlock,
   })
 
   // Decode events using unified decoding utility function (does not depend on underlying oasisQuery module's decoding results)
