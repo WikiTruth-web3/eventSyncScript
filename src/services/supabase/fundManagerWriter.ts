@@ -10,7 +10,7 @@ import { getEventArg } from '../../utils/eventArgs'
 import { normalizeHash } from '../../utils/eventArgs'
 import type { DecodedRuntimeEvent } from '../../oasisQuery/app/services/events'
 import { extractTimestamp } from '../../utils/extractTimestamp'
-import { generateRecordId } from '../../utils/generaId'
+import { generateRecordId } from '../../utils/generateId'
 
 /**
  * Convert transaction hash to BYTEA
