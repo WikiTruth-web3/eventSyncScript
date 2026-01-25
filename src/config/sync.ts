@@ -13,17 +13,6 @@ export const DEFAULT_SCOPE: RuntimeScope = {
     layer: (process.env.EVENT_SYNC_LAYER as RuntimeScope['layer']) ?? 'sapphire',
 }
 
-// /**
-//  * Event query configuration
-//  */
-// export const EVENT_QUERY_CONFIG = {
-//     /** Default query limit */
-//     DEFAULT_LIMIT: 500,
-
-//     /** Default batch size */
-//     DEFAULT_BATCH_SIZE: 200,
-// } as const
-
 /**
  * Sync state configuration
  */

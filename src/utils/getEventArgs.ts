@@ -3,9 +3,8 @@
  * Used to handle BigInt serialization issues
  */
 
-import type { DecodedRuntimeEvent } from '../../oasisQuery/app/services/events'
+import type { DecodedRuntimeEvent } from '../oasisQuery/app/services/events'
 import { getEventArg } from './eventArgs'
-import { fixEventErrorParam } from '../../utils/fixEventsErrorParam'
 
 /**
  * Convert value to string (handle BigInt)
@@ -22,6 +21,16 @@ export const toString = (value: unknown): string => {
   return String(value)
 }
 
+export const toBoolean = (value: unknown): boolean => {
+  if (typeof value === 'boolean') {
+    return value
+  }
+  if (value === null || value === undefined) {
+    return false
+  }
+  return Boolean(value)
+}
+
 /**
  * Safely extract event parameter and convert to string (correctly handle 0 value)
  * @param event - Decoded event
@@ -36,11 +45,10 @@ export const getEventArgAsString = (
   // Only return undefined when value is undefined or null
   // 0, '0', false, etc. are valid values
   if (value === undefined || value === null) {
-    return undefined
+    return ''
   }
-  let stringValue = fixEventErrorParam(event,key,toString(value))
   
-  return stringValue
+  return toString(value)
 }
 
 /**
@@ -54,6 +62,20 @@ export const getEventArgAsStringOrEmpty = (
   key: string,
 ): string => {
   return getEventArgAsString(event, key) ?? ''
+}
+
+export const getEventArgAsBoolean = (
+  event: DecodedRuntimeEvent<Record<string, unknown>>,
+  key: string,
+): boolean => {
+  const value = getEventArg<unknown>(event, key)
+  // Only return undefined when value is undefined or null
+  // 0, '0', false, etc. are valid values
+  if (value === undefined || value === null) {
+    return false
+  }
+  
+  return toBoolean(value)
 }
 
 /**

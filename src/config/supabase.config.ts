@@ -229,13 +229,15 @@ export interface Database {
                 Row: {
                     network: 'testnet' | 'mainnet';
                     layer: 'sapphire';
-                    id: string; // boxId (part of the primary key, corresponding to boxes.id)
+                    id: string; // boxId-UserId
+                    box_id: string;
                     bidder_id: string;
                 };
                 Insert: {
                     network: 'testnet' | 'mainnet';
                     layer?: 'sapphire';
-                    id: string; // boxId
+                    id: string; // boxId-UserId
+                    box_id: string;
                     bidder_id: string;
                 };
                 Update: never; // Do not allow subsequent updates

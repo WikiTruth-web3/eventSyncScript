@@ -15,16 +15,18 @@ Blockchain event synchronization script for syncing event data from Oasis Networ
 ### Local Development
 
 1. **Install Dependencies**
+
    ```bash
    cd eventSyncScript
    npm install
    ```
 
 2. **Configure Environment Variables**
+
    ```bash
    # Copy public configuration template
    cp .env.example .env
-   
+
    # Create local configuration file (contains sensitive information)
    cp .env.example .env.local
    # Edit .env.local file and fill in Supabase configuration:
@@ -32,7 +34,7 @@ Blockchain event synchronization script for syncing event data from Oasis Networ
    # - SUPABASE_ANON_KEY
    # - SUPABASE_SERVICE_ROLE_KEY
    ```
-   
+
    **Note**:
    - `.env` file contains public configuration and can be committed to the repository
    - `.env.local` file contains sensitive information (Supabase configuration) and will not be committed
@@ -74,6 +76,7 @@ The project supports two types of environment variable files:
 ### Configuration Priority
 
 Environment variable loading priority (from highest to lowest):
+
 1. `.env.local` file (local configuration, overrides other configurations)
 2. `.env` file (public configuration)
 3. System environment variables
@@ -90,8 +93,6 @@ Environment variable loading priority (from highest to lowest):
 - `EVENT_SYNC_FROM_BLOCK`: Specify starting block height
 - `EVENT_SYNC_LIMIT`: Limit on number of events per query
 - `EVENT_SYNC_BATCH_SIZE`: Batch size
-- `HTTP_PROXY`: HTTP proxy address (used when proxy is enabled)
-- `HTTPS_PROXY`: HTTPS proxy address (used when proxy is enabled)
 
 ## Development Tools
 
@@ -103,6 +104,7 @@ Located in `src/local/` directory:
 - `downloadIpfsFile.ts` - IPFS file download tool
 
 Run with:
+
 ```bash
 npm run decode:events
 npm run download:ipfs
@@ -114,7 +116,6 @@ npm run download:ipfs
 
 1. **Proxy Connection Failed**
    - Check `EVENT_SYNC_USE_PROXY` setting
-   - Verify `HTTP_PROXY` or `HTTPS_PROXY` configuration is correct
 
 2. **Supabase Connection Failed**
    - Check if `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY` are correct
@@ -127,4 +128,3 @@ npm run download:ipfs
 ## License
 
 [According to project license]
-

@@ -25,7 +25,7 @@ export const CONTRACT_EVENT_SIGNATURES: Record<ContractName, string[]> = {
         'event BoxStatusChanged(uint256 indexed boxId, uint8 status)',
         'event PriceChanged(uint256 indexed boxId, uint256 price)',
         'event DeadlineChanged(uint256 indexed boxId, uint256 deadline)',
-        'event PrivateKeyPublished(uint256 indexed boxId, bytes privateKey, uint256 indexed userId)',
+        'event PrivateKeyPublished(uint256 boxId, bytes privateKey, uint256 indexed userId)',
     ],
 
     [ContractName.USER_ID]: [

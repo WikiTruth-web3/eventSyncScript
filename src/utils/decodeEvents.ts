@@ -55,10 +55,21 @@ export const decodeContractEvents = <TArgs = Record<string, unknown>>(
     }
 
     // Decode events
-    return decodeRuntimeEvents<TArgs>(rawEvents, {
+    const decodedEvents = decodeRuntimeEvents<TArgs>(rawEvents, {
         contractAddress,
         eventSignatures,
     })
+
+    // Strip the large body field from raw events to reduce data volume (requested by user)
+    return decodedEvents.map(event => {
+        const { body, ...rawWithoutBody } = event.raw as any
+        return {
+            ...event,
+            raw: rawWithoutBody
+        }
+    })
+
+
 }
 
 /**

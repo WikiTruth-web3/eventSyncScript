@@ -1,5 +1,5 @@
-import type { DecodedRuntimeEvent } from '../../oasisQuery/app/services/events'
-import type { RuntimeEvent } from '../../oasisQuery/oasis-nexus/api'
+import type { DecodedRuntimeEvent } from '../oasisQuery/app/services/events'
+import type { RuntimeEvent } from '../oasisQuery/oasis-nexus/api'
 
 type EventWithArgs<T = Record<string, unknown>> = DecodedRuntimeEvent<T> & {
   raw: RuntimeEvent

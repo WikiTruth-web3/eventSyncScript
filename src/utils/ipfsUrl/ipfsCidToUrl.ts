@@ -1,7 +1,6 @@
 import { 
     getIpfsGateway, 
-    network, 
-    end,
+    network
 } from './gateway';
 
 /**
@@ -27,11 +26,8 @@ export const ipfsCidToUrl = async (uri: string): Promise<string> => {
     // Remove trailing slash
     // const cleanUri = uri.endsWith('/') ? uri.slice(0, -1) : uri;
     let cleanUri = uri;
-    if (cleanUri.endsWith(end) && cleanUri.startsWith(network)) {
+    if (cleanUri.startsWith(network)) {
         return cleanUri;
-    } else if (cleanUri.endsWith('.ipfs.w3s.link/')) {
-        // 去掉.ipfs.w3s.link/
-        cleanUri = cleanUri.slice(0, -15);
     } else if (cleanUri.endsWith('/')) {
         cleanUri = cleanUri.slice(0, -1);
     }

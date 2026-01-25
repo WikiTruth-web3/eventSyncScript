@@ -12,20 +12,47 @@ interface EventErrorFix {
     round: number
 }
 
-const TRUTH_BOX_EVENT_FIXES: EventErrorFix[] = [
+const TruthBox_event_FIXES_BoxCreated: EventErrorFix[] = [
     {
         contractAddress: "GuwBl7DdwEEjk4E/hjOCdI2lwB4=",
         contractName: 'TruthBox',
         txHash: '777172dd777fcb7bd53c585f587d71ef380e1f54ee1807758fbb61854b64f42f',
-        eventName: 'BoxCreated',
-        paramName: 'userId',
-        incorrectValue: '2',
-        correctValue: '1',
+        eventName: 'BoxCreated', 
+        paramName: 'userId', 
+        incorrectValue: '2', 
+        correctValue: '1', 
         round: 14484034,
     }
 ]
 
-const EXCHANGE_EVENT_FIXES: EventErrorFix[] = [
+export function fixEventErrorParam_BoxCreated(
+    event: DecodedRuntimeEvent<Record<string, unknown>>,
+    paramName: string,
+    originalValue: string
+): string {
+    const txHash = event.raw.tx_hash ?? event.raw.eth_tx_hash
+    const round = event.raw.round
+    const eventName = event.eventName
+
+    // Match by txHash, eventName, and paramName. 
+    // txHash is unique enough that we don't strictly need to check contractAddress here,
+    // which makes the tool more robust if the 'body' was deleted to save space.
+    const fix = TruthBox_event_FIXES_BoxCreated.find(f =>
+        f.txHash === txHash &&
+        f.eventName === eventName &&
+        f.paramName === paramName &&
+        f.incorrectValue === originalValue &&
+        f.round === round
+    )
+
+    if (fix) {
+        return fix.correctValue
+    }
+
+    return originalValue
+}
+
+const Exchange_event_FIXES_BoxPurchased: EventErrorFix[] = [
     {
         contractAddress: "/UxM+osd868/egemMLL7umtFtA0=",
         contractName: 'Exchange',
@@ -34,8 +61,39 @@ const EXCHANGE_EVENT_FIXES: EventErrorFix[] = [
         paramName: 'userId',
         incorrectValue: '4',
         correctValue: '3',
-        round: 14785168
+        round: 14770892
     },
+
+]
+
+export function fixEventErrorParam_BoxPurchased(
+    event: DecodedRuntimeEvent<Record<string, unknown>>,
+    paramName: string,
+    originalValue: string
+): string {
+    const txHash = event.raw.tx_hash ?? event.raw.eth_tx_hash
+    const round = event.raw.round
+    const eventName = event.eventName
+
+    // Match by txHash, eventName, and paramName. 
+    // txHash is unique enough that we don't strictly need to check contractAddress here,
+    // which makes the tool more robust if the 'body' was deleted to save space.
+    const fix = Exchange_event_FIXES_BoxPurchased.find(f =>
+        f.txHash === txHash &&
+        f.eventName === eventName &&
+        f.paramName === paramName &&
+        f.incorrectValue === originalValue &&
+        f.round === round
+    )
+
+    if (fix) {
+        return fix.correctValue
+    }
+
+    return originalValue
+}
+
+const Exchange_event_FIXES_BidPlaced: EventErrorFix[] = [
     {
         contractAddress: "/UxM+osd868/egemMLL7umtFtA0=",
         contractName: 'Exchange',
@@ -48,32 +106,24 @@ const EXCHANGE_EVENT_FIXES: EventErrorFix[] = [
     }
 ]
 
-
-export function fixEventErrorParam(
+export function fixEventErrorParam_BidPlaced(
     event: DecodedRuntimeEvent<Record<string, unknown>>,
     paramName: string,
     originalValue: string
 ): string {
-
     const txHash = event.raw.tx_hash ?? event.raw.eth_tx_hash
     const round = event.raw.round
-    if (!txHash || round > 14785168) return originalValue
+    const eventName = event.eventName
 
-    const contractAddress = event.raw.body?.address
-    let events: EventErrorFix[] = []
-    if (contractAddress) {
-        if (contractAddress === "GuwBl7DdwEEjk4E/hjOCdI2lwB4=") {
-            events = TRUTH_BOX_EVENT_FIXES;
-        }
-        else if (contractAddress === "/UxM+osd868/egemMLL7umtFtA0=") {
-            events = EXCHANGE_EVENT_FIXES;
-        }
-    }
-    const fix = events.find(f =>
+    // Match by txHash, eventName, and paramName. 
+    // txHash is unique enough that we don't strictly need to check contractAddress here,
+    // which makes the tool more robust if the 'body' was deleted to save space.
+    const fix = Exchange_event_FIXES_BidPlaced.find(f =>
         f.txHash === txHash &&
-        f.eventName === event.eventName &&
+        f.eventName === eventName &&
         f.paramName === paramName &&
-        f.incorrectValue === originalValue
+        f.incorrectValue === originalValue &&
+        f.round === round
     )
 
     if (fix) {

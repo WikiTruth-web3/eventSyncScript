@@ -11,6 +11,7 @@
     "dev": "tsx --watch src/index.ts",
     "download:ipfs": "tsx src/local/downloadIpfsFile.ts",
     "decode:events": "tsx src/local/decodeEventsExample.ts",
+    "checkDecode": "tsx src/local/checkDecode.ts",
     "build": "tsc --noEmit",
     "typecheck": "tsc --noEmit",
     "lint": "echo \"No lint configuration yet\""

@@ -3,17 +3,19 @@ import type { RuntimeContractSyncResult } from '../../core/sync/runtimeContractS
 import type { RuntimeScope } from '../../oasisQuery/types/searchScope'
 import { ContractName } from '../../contractsConfig/types'
 import { isSupabaseConfigured } from '../../config/supabase'
-import { ensureUsersExist } from './usersWriter'
+import { ensureUserIdExist } from './ensureUsersId'
 import { getSupabaseClient } from '../../config/supabase'
-import { getEventArgAsString, sanitizeForSupabase } from './utils'
+import { getEventArgAsString, sanitizeForSupabase } from '../../utils/getEventArgs'
 import type { DecodedRuntimeEvent } from '../../oasisQuery/app/services/events'
 import { extractTimestamp } from '../../utils/extractTimestamp'
+import { fixEventErrorParam_BidPlaced, fixEventErrorParam_BoxPurchased } from '../../utils/fixEventsErrorParam'
+import { getBoolean } from '../../utils/getBoolean'
 
 /**
  * Handle BoxListed event
  * Update boxes table: listed_mode, accepted_token, listed_timestamp, seller_id
  */
-const handleBoxListed = async (
+export const handleBoxListed = async (
     scope: RuntimeScope,
     event: DecodedRuntimeEvent<Record<string, unknown>>,
 ): Promise<void> => {
@@ -26,28 +28,24 @@ const handleBoxListed = async (
     const supabase = getSupabaseClient()
     const timestamp = extractTimestamp(event)
 
-    const updates: Record<string, unknown> = {
+    const updates=sanitizeForSupabase({
         seller_id: userId,
         listed_timestamp: timestamp,
-    }
+    }) as Record<string, unknown>
 
     if (acceptedToken) {
         updates.accepted_token = acceptedToken.toLowerCase()
     }
 
-    // Determine listed_mode based on current status
-    // If status is 1 (Selling), then listed_mode is 1
-    // If status is 2 (Auctioning), then listed_mode is 2
-    // Here we assume that when BoxListed event is triggered, status has already been updated to 1 or 2 via BoxStatusChanged
-    // If needed, can query current status here
-
     const { error } = await supabase
         .from('boxes')
-        .update(sanitizeForSupabase(updates) as Record<string, unknown>)
+        .update(updates)
         .match({ network: scope.network, layer: scope.layer, id: boxId })
 
     if (error) {
         console.warn(`⚠️  Failed to update box ${boxId} for BoxListed:`, error.message)
+    } else {
+        console.log(`✅ Box ${boxId} updated listed_mode: ${updates.listed_mode}, accepted_token: ${updates.accepted_token}, listed_timestamp: ${updates.listed_timestamp}, seller_id: ${updates.seller_id}`)
     }
 }
 
@@ -55,17 +53,13 @@ const handleBoxListed = async (
  * Handle BoxPurchased event
  * Update boxes table: buyer_id, purchase_timestamp
  */
-const handleBoxPurchased = async (
+const _updateBuyerPurchaseTimestamp = async (
     scope: RuntimeScope,
-    event: DecodedRuntimeEvent<Record<string, unknown>>,
+    boxId: string,
+    userId: string,
+    timestamp: string,
 ): Promise<void> => {
-    const boxId = getEventArgAsString(event, 'boxId')
-    const userId = getEventArgAsString(event, 'userId')
-
-    if (!boxId || !userId) return
-
     const supabase = getSupabaseClient()
-    const timestamp = extractTimestamp(event)
 
     const updates = sanitizeForSupabase({
         buyer_id: userId,
@@ -78,8 +72,26 @@ const handleBoxPurchased = async (
         .match({ network: scope.network, layer: scope.layer, id: boxId })
 
     if (error) {
-        console.warn(`⚠️  Failed to update box ${boxId} for BoxPurchased:`, error.message)
+        console.warn(`⚠️  Failed to update box ${boxId} buyer_id: ${userId} and purchase_timestamp: ${timestamp}`, error.message)
+    } else {
+        console.log(`✅ Box ${boxId} updated buyer_id: ${userId} and purchase_timestamp: ${timestamp}`)
     }
+}
+
+export const handleBoxPurchased = async (
+    scope: RuntimeScope,
+    event: DecodedRuntimeEvent<Record<string, unknown>>,
+): Promise<void> => {
+    const boxId = getEventArgAsString(event, 'boxId')
+    const userId_orignal = getEventArgAsString(event, 'userId')
+    // NOTE: fixEventErrorParam_BoxPurchased
+    const userId = fixEventErrorParam_BoxPurchased(event, 'userId', userId_orignal || '')
+
+    if (!boxId || !userId) return
+
+    const timestamp = extractTimestamp(event)
+
+    _updateBuyerPurchaseTimestamp(scope, boxId, userId, timestamp)
 }
 
 /**
@@ -89,29 +101,35 @@ const handleBoxPurchased = async (
  * Multiple bids from the same bidder for the same box will only keep one record
  * Note: Assumes box already exists (created by TruthBox contract events), if not exists will be handled by database foreign key constraint
  */
-const handleBidPlaced = async (
+export const handleBidPlaced = async (
     scope: RuntimeScope,
     event: DecodedRuntimeEvent<Record<string, unknown>>,
 ): Promise<void> => {
     const boxId = getEventArgAsString(event, 'boxId')
-    const userId = getEventArgAsString(event, 'userId')
     const timestamp = extractTimestamp(event)
+    const userId_orignal = getEventArgAsString(event, 'userId')
+    // NOTE: fixEventErrorParam_BidPlaced
+    const userId = fixEventErrorParam_BidPlaced(event, 'userId', userId_orignal || '')
 
     // Only skip if boxId or userId is undefined (0 is a valid value)
     if (boxId === undefined || userId === undefined) {
         console.warn(`⚠️  BidPlaced event missing boxId or userId:`, { boxId, userId })
         return
     }
+    _updateBuyerPurchaseTimestamp(scope, boxId, userId, timestamp)
+
+    const boxBidderId = `${boxId}-${userId}`
 
     const supabase = getSupabaseClient()
-
+    
     // Use upsert to handle duplicate bids (ignore on primary key conflict)
     // Note: id and bidder_id need to be string-formatted numbers (PostgreSQL NUMERIC type)
     // Note: Assumes box already exists (created by TruthBox contract events), if not exists will be handled by database foreign key constraint
     const bidderData = sanitizeForSupabase({
         network: scope.network,
         layer: scope.layer,
-        id: boxId,
+        id: boxBidderId,
+        box_id: boxId,
         bidder_id: userId,
     }) as Record<string, unknown>
 
@@ -119,42 +137,22 @@ const handleBidPlaced = async (
     const { error: bidderError } = await supabase
         .from('box_bidders')
         .upsert(bidderData, {
-            onConflict: 'network,layer,id,bidder_id',
+            onConflict: 'network,layer,id',
         })
 
     if (bidderError) {
-        // If foreign key constraint error, box doesn't exist
-        if (bidderError.code === '23503') {
-            console.warn(`⚠️  Box ${boxId} does not exist (foreign key constraint), skipping BidPlaced event for bidder ${userId}`)
-            return
-        } else {
-            console.error(`❌ Failed to upsert bidder ${userId} for box ${boxId}:`, bidderError.message)
-            console.error(`   Error details:`, JSON.stringify(bidderError, null, 2))
-            console.error(`   Insert data:`, JSON.stringify(bidderData, null, 2))
-            return
-        }
+        console.error(`❌ Failed to upsert bidder ${userId} for box ${boxId}:`, bidderError.message)
+    } else {
+        console.log(`✅ Bidder ${userId} upserted for box ${boxId}`)
     }
 
-    // Update box's purchase_timestamp (update when there's a bid)
-    const boxUpdates = sanitizeForSupabase({
-        purchase_timestamp: timestamp,
-    }) as Record<string, unknown>
-
-    const { error: boxUpdateError } = await supabase
-        .from('boxes')
-        .update(boxUpdates)
-        .match({ network: scope.network, layer: scope.layer, id: boxId })
-
-    if (boxUpdateError) {
-        console.warn(`⚠️  Failed to update purchase_timestamp for box ${boxId}:`, boxUpdateError.message)
-    }
 }
 
 /**
  * Handle CompleterAssigned event
  * Update boxes table: completer_id, complete_timestamp
  */
-const handleCompleterAssigned = async (
+export const handleCompleterAssigned = async (
     scope: RuntimeScope,
     event: DecodedRuntimeEvent<Record<string, unknown>>,
 ): Promise<void> => {
@@ -178,6 +176,8 @@ const handleCompleterAssigned = async (
 
     if (error) {
         console.warn(`⚠️  Failed to update box ${boxId} for CompleterAssigned:`, error.message)
+    } else {
+        console.log(`✅ Box ${boxId} updated completer_id: ${userId} and complete_timestamp: ${timestamp}`)
     }
 }
 
@@ -185,7 +185,7 @@ const handleCompleterAssigned = async (
  * Handle RequestDeadlineChanged event
  * Update boxes table: request_refund_deadline
  */
-const handleRequestDeadlineChanged = async (
+export const handleRequestDeadlineChanged = async (
     scope: RuntimeScope,
     event: DecodedRuntimeEvent<Record<string, unknown>>,
 ): Promise<void> => {
@@ -207,6 +207,8 @@ const handleRequestDeadlineChanged = async (
 
     if (error) {
         console.warn(`⚠️  Failed to update box ${boxId} for RequestDeadlineChanged:`, error.message)
+    } else {
+        console.log(`✅ Box ${boxId} updated request_refund_deadline: ${deadline}`)
     }
 }
 
@@ -214,7 +216,7 @@ const handleRequestDeadlineChanged = async (
  * Handle ReviewDeadlineChanged event
  * Update boxes table: review_deadline
  */
-const handleReviewDeadlineChanged = async (
+export const handleReviewDeadlineChanged = async (
     scope: RuntimeScope,
     event: DecodedRuntimeEvent<Record<string, unknown>>,
 ): Promise<void> => {
@@ -236,6 +238,8 @@ const handleReviewDeadlineChanged = async (
 
     if (error) {
         console.warn(`⚠️  Failed to update box ${boxId} for ReviewDeadlineChanged:`, error.message)
+    } else {
+        console.log(`✅ Box ${boxId} updated review_deadline: ${deadline}`)
     }
 }
 
@@ -243,7 +247,7 @@ const handleReviewDeadlineChanged = async (
  * Handle RefundPermitChanged event
  * Update boxes table: refund_permit
  */
-const handleRefundPermitChanged = async (
+export const handleRefundPermitChanged = async (
     scope: RuntimeScope,
     event: DecodedRuntimeEvent<Record<string, unknown>>,
 ): Promise<void> => {
@@ -254,18 +258,7 @@ const handleRefundPermitChanged = async (
 
     // permission is a boolean value, get directly from event args
     const permissionRaw = (event.args as Record<string, unknown>)?.permission
-    if (permissionRaw === undefined || permissionRaw === null) return
-
-    // Handle boolean value (could be boolean, number, string)
-    let permission: boolean
-    if (typeof permissionRaw === 'boolean') {
-        permission = permissionRaw
-    } else if (typeof permissionRaw === 'number') {
-        permission = permissionRaw !== 0
-    } else {
-        const permissionStr = String(permissionRaw).toLowerCase()
-        permission = permissionStr === 'true' || permissionStr === '1'
-    }
+    const permission = getBoolean(permissionRaw, boxId)
 
     const updates = sanitizeForSupabase({
         refund_permit: permission,
@@ -278,54 +271,59 @@ const handleRefundPermitChanged = async (
 
     if (error) {
         console.warn(`⚠️  Failed to update box ${boxId} for RefundPermitChanged:`, error.message)
+    } else {
+        console.log(`✅ Box ${boxId} updated refund_permit: ${permission}`)
     }
 }
 
 /**
  * Process Exchange contract events and write to Supabase
+ * Internal Priority (per rules.md):
+ * 1. BoxListed
+ * 2. BoxPurchased, BidPlaced
+ * 3. Others (CompleterAssigned, RequestDeadlineChanged, ReviewDeadlineChanged, RefundPermitChanged)
  */
 export const persistExchangeSync = async (
     scope: RuntimeScope,
     contract: ContractName,
-    syncResult: RuntimeContractSyncResult,
+    events: DecodedRuntimeEvent<any>[],
 ): Promise<void> => {
     if (!isSupabaseConfigured()) {
         console.warn('⚠️  SUPABASE_URL / SUPABASE_SERVICE_ROLE_KEY not configured, skipping database write')
         return
     }
 
-    if (contract !== ContractName.EXCHANGE) return // Only process Exchange contract
+    if (contract !== ContractName.EXCHANGE) return 
 
     // ✅ First ensure users records exist (process userId from all events)
-    await ensureUsersExist(scope, syncResult.fetchResult)
+    await ensureUserIdExist(scope, events)
 
-    // Reverse event array: blockchain API returns newest first, we need oldest first
-    // This ensures latest event data is written last, overwriting previous values
-    const reversedEvents = [...syncResult.fetchResult.events].reverse()
 
-    // first stage: handle listed events
-    for (const event of reversedEvents) {
+    const getPriority = (eventName: string): number => {
+        if (eventName === 'BoxListed') return 1
+        if (eventName === 'BoxPurchased' || eventName === 'BidPlaced') return 2
+        return 3
+    }
+
+    const sortedEvents = events.sort((a, b) => {
+        const priorityA = getPriority(a.eventName)
+        const priorityB = getPriority(b.eventName)
+        return priorityA - priorityB
+    })
+
+    console.log(`📝 Processing Exchange events with priority sorting...`)
+
+    for (const event of sortedEvents) {
         switch (event.eventName) {
             case 'BoxListed':
                 await handleBoxListed(scope, event)
                 break
-        }
-    }
-
-    // second stage: handle purchased events
-    for (const event of reversedEvents) {
-        switch (event.eventName) {
             case 'BoxPurchased':
                 await handleBoxPurchased(scope, event)
                 break
             case 'BidPlaced':
                 await handleBidPlaced(scope, event)
                 break
-        }
-    }
-    // third stage: handle assigned events
-    for (const event of reversedEvents) {
-        switch (event.eventName) {
             case 'CompleterAssigned':
                 await handleCompleterAssigned(scope, event)
                 break

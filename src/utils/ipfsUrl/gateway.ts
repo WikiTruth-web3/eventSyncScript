@@ -10,7 +10,6 @@ interface Gateway {
 }
 
 export const network = 'https://';
-export const end = '.ipfs.w3s.link/'; // This is the gateway of fleek, which is no longer available
 
 // Initialize gateway list
 const gateways: Gateway[] = IPFS_GATEWAY_URLS.map(url => ({

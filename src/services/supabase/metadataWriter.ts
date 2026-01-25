@@ -1,9 +1,7 @@
 import type { RuntimeScope } from '../../oasisQuery/types/searchScope'
-import type { RuntimeEvent } from '../../oasisQuery/oasis-nexus/api'
-import type { DecodedRuntimeEvent } from '../../oasisQuery/app/services/events'
 import { getSupabaseClient } from '../../config/supabase'
 import { fetchMetadataBox, MetadataBoxPayload } from '../ipfs/fetchMetadataBox'
-import { sanitizeForSupabase, getEventArgAsString } from './utils'
+import { sanitizeForSupabase } from '../../utils/getEventArgs'
 
 type MetadataRecord = {
   network: RuntimeScope['network']
@@ -90,82 +88,31 @@ const normalizeMetadataRecord = (
   }
 }
 
-const extractBoxInfoCid = (event: DecodedRuntimeEvent<Record<string, unknown>>) => {
-  // Use common utility to safely extract event parameters (correctly handle 0 values)
-  return {
-    boxId: getEventArgAsString(event, 'boxId'),
-    boxInfoCID: getEventArgAsString(event, 'boxInfoCID'),
-  }
-}
-
-const sanitizeCid = (cid?: string): string | undefined => {
-  if (!cid) return undefined
-  return cid.replace(/^ipfs:\/\//, '')
-}
-
 export const upsertMetadataFromEvents = async (
   scope: RuntimeScope,
-  events: DecodedRuntimeEvent<Record<string, unknown>>[],
+  boxId: string,
+  boxInfoCID: string,
 ) => {
-  // Reverse event array: blockchain API returns newest first, we need oldest first
-  // This ensures latest metadata is written last, overwriting previous values
-  const reversedEvents = [...events].reverse()
-  
-  const targets = reversedEvents
-    .map(event => {
-      const { boxId, boxInfoCID } = extractBoxInfoCid(event)
-      const cid = sanitizeCid(boxInfoCID)
-      // After using common utility, boxId of '0' will not be filtered
-      // Only skip if boxId is undefined or cid is empty
-      if (boxId === undefined || !cid) return null
-      return { boxId, cid }
+  try {
+    const metadata = await fetchMetadataBox(boxInfoCID)
+    const record = normalizeMetadataRecord(scope, boxId, metadata)
+    console.log(`✅ Successfully fetched metadata for box ${boxId}`)
+
+    const supabase = getSupabaseClient()
+    // Sanitize all records to ensure no BigInt
+    const sanitizedRecord = sanitizeForSupabase(record) as MetadataRecord
+    
+    const { error } = await supabase.from('metadata_boxes').upsert(sanitizedRecord, {
+      onConflict: 'network,layer,id',
     })
-    .filter((item): item is { boxId: string; cid: string } => Boolean(item))
-
-  if (!targets.length) return
-
-  const records: MetadataRecord[] = []
-  const failedBoxes: Array<{ boxId: string; cid: string; error: string }> = []
-  
-  for (const target of targets) {
-    try {
-      const metadata = await fetchMetadataBox(target.cid)
-      records.push(normalizeMetadataRecord(scope, target.boxId, metadata))
-      console.log(`✅ Successfully fetched metadata for box ${target.boxId}`)
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : String(error)
-      failedBoxes.push({ boxId: target.boxId, cid: target.cid, error: errorMessage })
-      console.warn(`⚠️  Failed to fetch metadata for box ${target.boxId} (CID: ${target.cid}):`, errorMessage)
+    
+    if (error) {
+      throw new Error(`Failed to upsert metadata_boxes: ${error.message}`)
+    } else {
+      console.log(`✅ Metadata for box ${boxId} upserted successfully`)
     }
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : String(error)
+    console.warn(`⚠️  Failed to fetch or save metadata for box ${boxId} (CID: ${boxInfoCID}):`, errorMessage)
   }
-
-  // If there are failed records, log but don't prevent processing successful records
-  if (failedBoxes.length > 0) {
-    console.warn(
-      `⚠️  ${failedBoxes.length} box metadata fetch failed. ` +
-      `These boxes will be skipped for now and can be retried later.`
-    )
-  }
-
-  if (!records.length) return
-
-  const supabase = getSupabaseClient()
-  // Sanitize all records to ensure no BigInt
-  const sanitizedRecords = records.map(record => sanitizeForSupabase(record) as MetadataRecord)
-  const { error } = await supabase.from('metadata_boxes').upsert(sanitizedRecords, {
-    onConflict: 'network,layer,id',
-  })
-  if (error) {
-    throw new Error(`Failed to upsert metadata_boxes: ${error.message}`)
-  }
-
-  // Update boxes table so box_info_cid stays fresh
-  await Promise.all(
-    records.map(record =>
-      supabase
-        .from('boxes')
-        .update({ box_info_cid: targets.find(t => t.boxId === record.id)?.cid })
-        .match({ network: record.network, layer: record.layer, id: record.id }),
-    ),
-  )
 }

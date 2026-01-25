@@ -1,29 +1,16 @@
 // src/services/supabase/fundManagerWriter.ts
-import type { RuntimeContractSyncResult } from '../../core/sync/runtimeContractSyncer'
+// import type { RuntimeContractSyncResult } from '../../core/sync/runtimeContractSyncer'
 import type { RuntimeScope } from '../../oasisQuery/types/searchScope'
 import { ContractName } from '../../contractsConfig/types'
 import { isSupabaseConfigured } from '../../config/supabase'
-import { ensureUsersExist } from './usersWriter'
+import { ensureUserIdExist } from './ensureUsersId'
 import { getSupabaseClient } from '../../config/supabase'
-import { getEventArgAsString, sanitizeForSupabase } from './utils'
-import { getEventArg } from './eventArgs'
-import { normalizeHash } from './eventArgs'
+import { getEventArgAsString, sanitizeForSupabase } from '../../utils/getEventArgs'
+import { getEventArg } from '../../utils/eventArgs'
+import { normalizeHash } from '../../utils/eventArgs'
 import type { DecodedRuntimeEvent } from '../../oasisQuery/app/services/events'
 import { extractTimestamp } from '../../utils/extractTimestamp'
-
-/**
- * Generate record ID: transaction_hash-log_index
- */
-const generateRecordId = (event: DecodedRuntimeEvent<Record<string, unknown>>): string => {
-    const txHash = normalizeHash(event.raw.tx_hash ?? event.raw.eth_tx_hash)
-    const logIndex = (event.raw.body as Record<string, unknown>)?.log_index ?? event.raw.tx_index ?? 0
-    
-    // Use the data
-    const data = event.raw.body?.data as string | undefined
-    const dataHash = data ? data.slice(-8) : 'unknown'
-    
-    return `${txHash}-${logIndex}-${dataHash}`
-}
+import { generateRecordId } from '../../utils/generaId'
 
 /**
  * Convert transaction hash to BYTEA
@@ -43,7 +30,7 @@ const hashToBytea = (hash: string): Uint8Array => {
  * Handle OrderAmountPaid event
  * Insert into payments table
  */
-const handleOrderAmountPaid = async (
+export const handleOrderAmountPaid = async (
     scope: RuntimeScope,
     event: DecodedRuntimeEvent<Record<string, unknown>>,
 ): Promise<void> => {
@@ -84,6 +71,8 @@ const handleOrderAmountPaid = async (
     if (error) {
         console.error(`❌ Failed to insert payment for box ${boxId}:`, error.message)
         console.error(`   Error info:`, JSON.stringify(error, null, 2))
+    } else {
+        console.log(`✅ Inserted payment for box ${boxId}`)
     }
 }
 
@@ -91,7 +80,7 @@ const handleOrderAmountPaid = async (
  * Handle OrderAmountWithdraw event
  * Insert into withdraw table
  */
-const handleOrderAmountWithdraw = async (
+export const handleOrderAmountWithdraw = async (
     scope: RuntimeScope,
     event: DecodedRuntimeEvent<Record<string, unknown>>,
 ): Promise<void> => {
@@ -142,13 +131,15 @@ const handleOrderAmountWithdraw = async (
     if (error) {
         console.error(`❌ Failed to insert withdraw for user ${userId} (${withdrawType}):`, error.message)
         console.error(`   Error info:`, JSON.stringify(error, null, 2))
+    } else {
+        console.log(`✅ Inserted withdraw for user ${userId} (${withdrawType})`)
     }
 }
 /**
  * Handle RewardsAdded event
  * Insert into rewards_addeds table
  */
-const handleRewardsAdded = async (
+export const handleRewardsAdded = async (
     scope: RuntimeScope,
     event: DecodedRuntimeEvent<Record<string, unknown>>,
 ): Promise<void> => {
@@ -204,6 +195,8 @@ const handleRewardsAdded = async (
     if (error) {
         console.error(`❌ Failed to insert reward for box ${boxId} (${rewardType}):`, error.message)
         console.error(`   Error info:`, JSON.stringify(error, null, 2))
+    } else {
+        console.log(`✅ Inserted reward for box ${boxId} (${rewardType})`)
     }
 }
 
@@ -212,7 +205,7 @@ const handleRewardsAdded = async (
  * Handle HelperRewrdsWithdraw event
  * Insert into withdraws table (withdraw_type: 'Helper')
  */
-const handleHelperRewardsWithdraw = async (
+export const handleHelperRewardsWithdraw = async (
     scope: RuntimeScope,
     event: DecodedRuntimeEvent<Record<string, unknown>>,
 ): Promise<void> => {
@@ -253,6 +246,8 @@ const handleHelperRewardsWithdraw = async (
     if (error) {
         console.error(`❌ Failed to insert helper reward withdraw for user ${userId}:`, error.message)
         console.error(`   Error info:`, JSON.stringify(error, null, 2))
+    } else {
+        console.log(`✅ Inserted helper reward withdraw for user ${userId}`)
     }
 }
 
@@ -261,7 +256,7 @@ const handleHelperRewardsWithdraw = async (
  * Handle MinterRewardsWithdraw event
  * Insert into withdraws table (withdraw_type: 'Minter')
  */
-const handleMinterRewardsWithdraw = async (
+export const handleMinterRewardsWithdraw = async (
     scope: RuntimeScope,
     event: DecodedRuntimeEvent<Record<string, unknown>>,
 ): Promise<void> => {
@@ -302,6 +297,8 @@ const handleMinterRewardsWithdraw = async (
     if (error) {
         console.error(`❌ Failed to insert minter reward withdraw for user ${userId}:`, error.message)
         console.error(`   Error info:`, JSON.stringify(error, null, 2))
+    } else {
+        console.log(`✅ Inserted minter reward withdraw for user ${userId}`)
     }
 }
 
@@ -309,7 +306,7 @@ const handleMinterRewardsWithdraw = async (
  * Ensure fund_manager_state record exists
  * This is required by token_total_amounts table foreign key constraint
  */
-const ensureFundManagerStateExists = async (scope: RuntimeScope): Promise<void> => {
+export const ensureFundManagerStateExists = async (scope: RuntimeScope): Promise<void> => {
     const supabase = getSupabaseClient()
     
     const { error } = await supabase
@@ -327,36 +324,51 @@ const ensureFundManagerStateExists = async (scope: RuntimeScope): Promise<void> 
 
     if (error) {
         console.warn(`⚠️  Failed to ensure fund_manager_state exists:`, error.message)
+    } else {
+        console.log(`✅ Ensured fund_manager_state exists`)
     }
 }
 
 /**
  * Process FundManager contract events and write to Supabase
+ * Internal Priority (per rules.md):
+ * 1. OrderAmountPaid
+ * 2. RewardsAdded
+ * 3. Others (OrderAmountWithdraw, HelperRewrdsWithdraw, MinterRewardsWithdraw)
  */
 export const persistFundManagerSync = async (
     scope: RuntimeScope,
     contract: ContractName,
-    syncResult: RuntimeContractSyncResult,
+    events: DecodedRuntimeEvent<any>[],
 ): Promise<void> => {
     if (!isSupabaseConfigured()) {
         console.warn('⚠️  SUPABASE_URL / SUPABASE_SERVICE_ROLE_KEY not configured, skipping database write')
         return
     }
 
-    if (contract !== ContractName.FUND_MANAGER) return // Only process FundManager contract
+    if (contract !== ContractName.FUND_MANAGER) return 
 
     // ✅ First ensure fund_manager_state record exists (required by payments trigger)
     await ensureFundManagerStateExists(scope)
 
     // ✅ Then ensure users records exist
-    await ensureUsersExist(scope, syncResult.fetchResult)
+    await ensureUserIdExist(scope, events)
 
-    // Reverse event array: blockchain API returns newest first, we need oldest first
-    // This ensures latest event data is written last, overwriting previous values
-    const reversedEvents = [...syncResult.fetchResult.events].reverse()
+    const getPriority = (eventName: string): number => {
+        if (eventName === 'OrderAmountPaid') return 1
+        if (eventName === 'RewardsAdded') return 2
+        return 3
+    }
 
-    // first stage: handle payment and reward added events
-    for (const event of reversedEvents) {
+    const sortedEvents = events.sort((a, b) => {
+        const priorityA = getPriority(a.eventName)
+        const priorityB = getPriority(b.eventName)
+        return priorityA - priorityB
+    })
+
+    console.log(`📝 Processing FundManager events with priority sorting...`)
+
+    for (const event of sortedEvents) {
         switch (event.eventName) {
             case 'OrderAmountPaid':
                 await handleOrderAmountPaid(scope, event)
@@ -364,11 +376,6 @@ export const persistFundManagerSync = async (
             case 'RewardsAdded':
                 await handleRewardsAdded(scope, event)
                 break
-        }
-    }
-    // second stage: handle withdraw events
-    for (const event of reversedEvents) {
-        switch (event.eventName) {
             case 'OrderAmountWithdraw':
                 await handleOrderAmountWithdraw(scope, event)
                 break
