@@ -2,6 +2,9 @@ import type { RuntimeScope } from '../../oasisQuery/types/searchScope'
 import { getSupabaseClient } from '../../config/supabase'
 import { fetchMetadataBox, MetadataBoxPayload } from '../ipfs/fetchMetadataBox'
 import { sanitizeForSupabase } from '../../utils/getEventArgs'
+import { MetadataBoxPayload_v2, convertV1ToV2 } from '../../utils/metadata/metadataBoxTypes'
+
+const V2_BLOCK_THRESHOLD = 15615554
 
 type MetadataRecord = {
   network: RuntimeScope['network']
@@ -33,10 +36,13 @@ const toISODate = (value?: string): string | null => {
   return Number.isNaN(date.getTime()) ? null : date.toISOString()
 }
 
+/**
+ * Normalize v2 metadata for Supabase storage
+ */
 const normalizeMetadataRecord = (
   scope: RuntimeScope,
   boxId: string,
-  metadata: MetadataBoxPayload,
+  metadata: MetadataBoxPayload_v2,
 ): MetadataRecord => {
   // Handle timestamp, ensure BigInt is converted to number
   let timestamp: number | null = null
@@ -51,40 +57,40 @@ const normalizeMetadataRecord = (
   }
 
   // Sanitize nested objects that may contain BigInt
-  const encryptionSlicesMetadataCID = metadata.encryptionSlicesMetadataCID
-    ? (sanitizeForSupabase(metadata.encryptionSlicesMetadataCID) as Record<string, unknown>)
+  const encryptionSlicesMetadataCID = metadata.encryption_slices_metadata_cid
+    ? (sanitizeForSupabase(metadata.encryption_slices_metadata_cid) as Record<string, unknown>)
     : null
 
-  const encryptionFileCID = metadata.encryptionFileCID
-    ? (sanitizeForSupabase(metadata.encryptionFileCID) as Record<string, unknown>[])
+  const encryptionFileCID = metadata.encryption_file_cid
+    ? (sanitizeForSupabase(metadata.encryption_file_cid) as Record<string, unknown>[])
     : null
 
-  const encryptionPasswords = metadata.encryptionPasswords
-    ? (sanitizeForSupabase(metadata.encryptionPasswords) as Record<string, unknown>)
+  const encryptionPasswords = metadata.encryption_passwords
+    ? (sanitizeForSupabase(metadata.encryption_passwords) as Record<string, unknown>)
     : null
 
   return {
     network: scope.network,
     layer: scope.layer,
     id: boxId,
-    type_of_crime: metadata.typeOfCrime,
+    type_of_crime: metadata.type_of_crime,
     label: metadata.label,
     title: metadata.title,
-    nft_image: metadata.nftImage,
-    box_image: metadata.boxImage,
+    nft_image: metadata.nft_image,
+    box_image: metadata.box_image,
     country: metadata.country,
     state: metadata.state,
     description: metadata.description,
-    event_date: metadata.eventDate ? toISODate(metadata.eventDate)?.split('T')[0] ?? null : null,
-    create_date: toISODate(metadata.createDate),
+    event_date: metadata.event_date ? toISODate(metadata.event_date)?.split('T')[0] ?? null : null,
+    create_date: toISODate(metadata.create_date),
     timestamp,
-    mint_method: metadata.mintMethod ?? null,
-    file_list: metadata.fileList,
+    mint_method: metadata.mint_method ?? null,
+    file_list: metadata.file_list,
     password: metadata.password ?? null,
     encryption_slices_metadata_cid: encryptionSlicesMetadataCID,
     encryption_file_cid: encryptionFileCID,
     encryption_passwords: encryptionPasswords,
-    public_key: metadata.publicKey ?? null,
+    public_key: metadata.public_key ?? null,
   }
 }
 
@@ -92,11 +98,22 @@ export const upsertMetadataFromEvents = async (
   scope: RuntimeScope,
   boxId: string,
   boxInfoCID: string,
+  blockHeight: number,
 ) => {
   try {
-    const metadata = await fetchMetadataBox(boxInfoCID)
-    const record = normalizeMetadataRecord(scope, boxId, metadata)
-    console.log(`✅ Successfully fetched metadata for box ${boxId}`)
+    let metadata = await fetchMetadataBox(boxInfoCID)
+    
+    // Check if we need to convert from v1 to v2 based on block height
+    let finalMetadata: MetadataBoxPayload_v2
+    if (blockHeight < V2_BLOCK_THRESHOLD) {
+      console.log(`📦 Block ${blockHeight} is below threshold ${V2_BLOCK_THRESHOLD}, converting metadata v1 -> v2`)
+      finalMetadata = convertV1ToV2(metadata as any) // Typecast since union might be v1 or already v2
+    } else {
+      finalMetadata = metadata as MetadataBoxPayload_v2
+    }
+
+    const record = normalizeMetadataRecord(scope, boxId, finalMetadata)
+    console.log(`✅ Successfully normalized metadata for box ${boxId}`)
 
     const supabase = getSupabaseClient()
     // Sanitize all records to ensure no BigInt

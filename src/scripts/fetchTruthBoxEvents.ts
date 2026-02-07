@@ -6,7 +6,7 @@ import { saveEventDataToFile, shouldSaveEventDataToFile } from '../local/saveEve
 import { updateSyncStatus } from '../core/state'
 import { decodeContractEvents } from '../utils/decodeEvents'
 import { persistTruthBoxSync } from '../services/supabase/truthBoxWriter'
-import { CONSTANTS } from '../index'
+import { CONTROLLER } from '../controller'
 import type { DecodedRuntimeEvent } from '../oasisQuery/app/services/events'
 
 export interface FetchTruthBoxEventsResult {
@@ -49,7 +49,7 @@ export async function fetchTruthBoxEvents(
 
 
   // Phase 2: Process each contract independently in a specific order to handle dependencies
-  if (CONSTANTS.writeToSupabase && decodedEvents.length > 0) {
+  if (CONTROLLER.writeToSupabase && decodedEvents.length > 0) {
     await persistTruthBoxSync(DEFAULT_SCOPE, ContractName.TRUTH_BOX, decodedEvents)
   }
 
@@ -66,7 +66,7 @@ export async function fetchTruthBoxEvents(
   const block_number = syncResult.cursorAfter.lastBlock
 
   // Phase 3: Update sync status
-  if (CONSTANTS.isUpdateLastBlock) {
+  if (CONTROLLER.isUpdateLastBlock) {
     await updateSyncStatus(DEFAULT_SCOPE, ContractName.TRUTH_BOX, block_number)
   }
 

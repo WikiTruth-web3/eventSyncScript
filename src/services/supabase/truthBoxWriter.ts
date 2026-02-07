@@ -8,7 +8,7 @@ import { sanitizeForSupabase, getEventArgAsString, hasEventArg } from '../../uti
 import type { DecodedRuntimeEvent } from '../../oasisQuery/app/services/events'
 import { extractTimestamp } from '../../utils/extractTimestamp'
 import { upsertMetadataFromEvents } from './metadataWriter'
-import {CONSTANTS} from '../../index'
+import { CONTROLLER } from '../../controller'
 import { fixEventErrorParam_BoxCreated } from '../../utils/fixEventsErrorParam'
 
 /**
@@ -77,11 +77,23 @@ export const handleBoxCreated = async (
         console.log(`✅ Upserted box ${boxId}`)
     }
 
-    // write metadata
-    if (boxInfoCID && CONSTANTS.writeMetadataBox) {
-        // get metadata from ipfs
-        await upsertMetadataFromEvents(scope, boxId, boxInfoCID)
+    if ( 'writeMetadataBox' in CONTROLLER) {
+        // write metadata
+        if (boxInfoCID && CONTROLLER.writeMetadataBox) {
+            // get metadata from ipfs
+            const blockHeight = event.raw.round ?? 0
+            await upsertMetadataFromEvents(scope, boxId, boxInfoCID, blockHeight)
+        }
+    } else if (CONTROLLER.onlyWrite === 'metadataBox') {
+        // write metadata
+        if (boxInfoCID) {
+            // get metadata from ipfs
+            const blockHeight = event.raw.round ?? 0
+            await upsertMetadataFromEvents(scope, boxId, boxInfoCID, blockHeight)
+        }
     }
+
+    
 }
 
 // export const handleBoxStatusChanged = async (

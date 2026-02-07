@@ -2,32 +2,9 @@ import { ipfsCidToUrl } from '../../utils/ipfsUrl/ipfsCidToUrl'
 import { refreshGatewayStatus, clearGatewayCache } from '../../utils/ipfsUrl/gateway'
 import { IPFS_CONFIG } from '../../config/ipfs'
 import { fetchWithProxy } from '../../utils/fetchWithProxy'
+import { MetadataBoxPayload_v1, MetadataBoxPayload_v2 } from '../../utils/metadata/metadataBoxTypes'
 
-export interface MetadataBoxPayload {
-  name?: string
-  tokenId?: string
-  typeOfCrime?: string
-  label?: string[]
-  title?: string
-  nftImage?: string
-  boxImage?: string
-  country?: string
-  state?: string
-  description?: string
-  eventDate?: string
-  createDate?: string
-  timestamp?: number
-  mintMethod?: string
-  project?: string
-  website?: string[]
-  fileList?: string[]
-  password?: string
-  encryptionSlicesMetadataCID?: Record<string, unknown>
-  encryptionFileCID?: Record<string, unknown>[]
-  encryptionPasswords?: Record<string, unknown>
-  publicKey?: string
-  [key: string]: unknown
-}
+export type MetadataBoxPayload = MetadataBoxPayload_v1 | MetadataBoxPayload_v2
 
 /**
  * Delay function

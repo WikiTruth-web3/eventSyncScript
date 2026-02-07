@@ -6,7 +6,7 @@ import { saveEventDataToFile, shouldSaveEventDataToFile } from '../local/saveEve
 import { decodeContractEvents } from '../utils/decodeEvents'
 import { updateSyncStatus } from '../core/state'
 import { persistUserIdSync } from '../services/supabase/userIdWriter'
-import { CONSTANTS } from '../index'
+import { CONTROLLER } from '../controller'
 
 import type { DecodedRuntimeEvent } from '../oasisQuery/app/services/events'
 
@@ -48,7 +48,7 @@ export async function fetchUserIdEvents(
     console.log(`✅ Fetched ${decodedEvents.length} decoded events (total ${syncResult.fetchResult.totalFetched} raw events, fetched ${syncResult.fetchResult.pagesFetched} pages)`)
 
     // Phase 2: Process each contract independently in a specific order to handle dependencies
-    if (CONSTANTS.writeToSupabase && decodedEvents.length > 0) {
+    if (CONTROLLER.writeToSupabase && decodedEvents.length > 0) {
         await persistUserIdSync(DEFAULT_SCOPE, ContractName.USER_ID, decodedEvents)
     }
 
@@ -62,7 +62,7 @@ export async function fetchUserIdEvents(
     const block_number = syncResult.cursorAfter.lastBlock
 
     // Phase 3: Update sync status
-    if (CONSTANTS.isUpdateLastBlock) {
+    if (CONTROLLER.isUpdateLastBlock) {
       await updateSyncStatus(DEFAULT_SCOPE, ContractName.USER_ID, block_number)
     }
 

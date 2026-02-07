@@ -5,7 +5,7 @@ import { DEFAULT_SCOPE,} from '../config/sync'
 import { saveEventDataToFile, shouldSaveEventDataToFile } from '../local/saveEventDataToFile'
 import { decodeContractEvents } from '../utils/decodeEvents'
 import { updateSyncStatus } from '../core/state'
-import { CONSTANTS } from '../index'
+import { CONTROLLER } from '../controller'
 import { persistExchangeSync } from '../services/supabase/exchangeWriter'
 import type { DecodedRuntimeEvent } from '../oasisQuery/app/services/events'
 
@@ -47,7 +47,7 @@ export async function fetchExchangeEvents(
   console.log(`✅ Fetched ${decodedEvents.length} decoded events (total ${syncResult.fetchResult.totalFetched} raw events, fetched ${syncResult.fetchResult.pagesFetched} pages)`)
 
   // Phase 2: Process each contract independently in a specific order to handle dependencies
-  if (CONSTANTS.writeToSupabase && decodedEvents.length > 0) {
+  if (CONTROLLER.writeToSupabase && decodedEvents.length > 0) {
     await persistExchangeSync(DEFAULT_SCOPE, ContractName.EXCHANGE, decodedEvents)
   }
 
@@ -61,7 +61,7 @@ export async function fetchExchangeEvents(
   const block_number = syncResult.cursorAfter.lastBlock
 
   // Phase 3: Update sync status
-      if (CONSTANTS.isUpdateLastBlock) {
+      if (CONTROLLER.isUpdateLastBlock) {
         await updateSyncStatus(DEFAULT_SCOPE, ContractName.EXCHANGE, block_number)
       }
 
