@@ -77,14 +77,10 @@ export const handleBoxCreated = async (
         console.log(`✅ Upserted box ${boxId}`)
     }
 
-    if ( 'writeMetadataBox' in CONTROLLER) {
-        // write metadata
-        if (boxInfoCID && CONTROLLER.writeMetadataBox) {
-            // get metadata from ipfs
-            const blockHeight = event.raw.round ?? 0
-            await upsertMetadataFromEvents(scope, boxId, boxInfoCID, blockHeight)
-        }
-    } else if (CONTROLLER.onlyWrite === 'metadataBox') {
+    if (
+        CONTROLLER.writeList.includes('metadataBox') && 
+        CONTROLLER.writeToSupabase
+    ) {
         // write metadata
         if (boxInfoCID) {
             // get metadata from ipfs

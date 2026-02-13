@@ -11,15 +11,6 @@ import { CONTROLLER } from './controller'
 
 async function main() {
   try {
-    if ('onlyWrite' in CONTROLLER) {
-        console.log(`🚀 Starting sync in onlyWrite: ${CONTROLLER.mode}${CONTROLLER.onlyWrite ? ` (${CONTROLLER.onlyWrite})` : ''}`)
-    } else {
-        console.log(`🚀 Starting sync in mode: ${CONTROLLER.mode}`)
-    }
-
-    if (!CONTROLLER.writeToSupabase && CONTROLLER.mode === 'AllData') {
-      console.log('🌐 Note: writeToSupabase is disabled. Data will be fetched but not persisted.')
-    }
 
     const default_start_block = 14458354
     
@@ -40,26 +31,24 @@ async function main() {
     }
 
     // Fetch events from contracts according to current mode
-    const runAll = CONTROLLER.mode === 'AllData'
-    const onlyWrite = 'onlyWrite' in CONTROLLER ? CONTROLLER.onlyWrite : ''
 
-    if (runAll || onlyWrite === 'truthBox' || onlyWrite === 'metadataBox') {
+    if (CONTROLLER.writeList.includes('truthBox') || CONTROLLER.writeList.includes('metadataBox')) {
       await fetchTruthBoxEvents(DEFAULT_SCOPE, truthBoxLastBlock)
     }
     
-    if (runAll || onlyWrite === 'truthNFT') {
+    if (CONTROLLER.writeList.includes('truthNFT')) {
       await fetchTruthNFTEvents(DEFAULT_SCOPE, truthNFTLastBlock)
     }
 
-    if (runAll || onlyWrite === 'exchange') {
+    if (CONTROLLER.writeList.includes('exchange')) {
       await fetchExchangeEvents(DEFAULT_SCOPE, exchangeLastBlock)
     }
 
-    if (runAll || onlyWrite === 'fundManager') {
+    if (CONTROLLER.writeList.includes('fundManager')) {
       await fetchFundManagerEvents(DEFAULT_SCOPE, fundManagerLastBlock)
     }
 
-    if (runAll || onlyWrite === 'userId') {
+    if (CONTROLLER.writeList.includes('userId')) {
       await fetchUserIdEvents(DEFAULT_SCOPE, userIdLastBlock)
     }
 

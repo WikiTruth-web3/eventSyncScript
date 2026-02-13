@@ -65,7 +65,7 @@ export async function fetchTruthBoxEvents(
   // Return latest event block height
   const block_number = syncResult.cursorAfter.lastBlock
 
-  // Phase 3: Update sync status
+  // Phase 3: Update sync status ====================================
   if (CONTROLLER.isUpdateLastBlock) {
     await updateSyncStatus(DEFAULT_SCOPE, ContractName.TRUTH_BOX, block_number)
   }
