@@ -32,23 +32,23 @@ async function main() {
 
     // Fetch events from contracts according to current mode
 
-    if (CONTROLLER.writeList.includes('truthBox') || CONTROLLER.writeList.includes('metadataBox')) {
+    if (CONTROLLER.queryList.includes('truthBox') || CONTROLLER.queryList.includes('metadataBox')) {
       await fetchTruthBoxEvents(DEFAULT_SCOPE, truthBoxLastBlock)
     }
     
-    if (CONTROLLER.writeList.includes('truthNFT')) {
+    if (CONTROLLER.queryList.includes('truthNFT')) {
       await fetchTruthNFTEvents(DEFAULT_SCOPE, truthNFTLastBlock)
     }
 
-    if (CONTROLLER.writeList.includes('exchange')) {
+    if (CONTROLLER.queryList.includes('exchange')) {
       await fetchExchangeEvents(DEFAULT_SCOPE, exchangeLastBlock)
     }
 
-    if (CONTROLLER.writeList.includes('fundManager')) {
+    if (CONTROLLER.queryList.includes('fundManager')) {
       await fetchFundManagerEvents(DEFAULT_SCOPE, fundManagerLastBlock)
     }
 
-    if (CONTROLLER.writeList.includes('userId')) {
+    if (CONTROLLER.queryList.includes('userId')) {
       await fetchUserIdEvents(DEFAULT_SCOPE, userIdLastBlock)
     }
 

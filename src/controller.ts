@@ -1,5 +1,5 @@
 
-export type WriteListType = 
+export type QueryListType = 
   | 'metadataBox' 
   | 'truthBox' 
   | 'truthNFT' 
@@ -12,23 +12,23 @@ export interface CommonType {
     writeToSupabase: boolean;
     restart: boolean;
     isUpdateLastBlock: boolean;
-    writeList: WriteListType[];
+    queryList: QueryListType[];
   }
 
 // ==========================================
 // ==========================================
 
 const COMMON_CONSTANT = {
-    writeToSupabase: true,
+    writeToSupabase: false,
     restart: false,
-    isUpdateLastBlock: true,
+    isUpdateLastBlock: false,
 }
 
 
-const controller = (list: WriteListType[]): CommonType => {
+const controller = (list: QueryListType[]): CommonType => {
     return {
         ...COMMON_CONSTANT,
-        writeList: list,
+        queryList: list,
     }
 }
 
