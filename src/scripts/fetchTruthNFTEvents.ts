@@ -1,76 +1,76 @@
-import { ContractName } from '../contractsConfig/types'
-import type { RuntimeScope } from '../oasisQuery/types/searchScope'
-import { syncRuntimeContractEvents } from '../core/sync'
-import { DEFAULT_SCOPE,} from '../config/sync'
-import { saveEventDataToFile, shouldSaveEventDataToFile } from '../local/saveEventDataToFile'
-import { decodeContractEvents } from '../utils/decodeEvents'
-import { updateSyncStatus } from '../core/state'
-import { persistTruthNFTSync } from '../services/supabase/truthNFTWriter'
-import { CONTROLLER } from '../controller'
+// import { ContractName } from '../contractsConfig/types'
+// import type { RuntimeScope } from '../oasisQuery/types/searchScope'
+// import { syncRuntimeContractEvents } from '../core/sync'
+// import { DEFAULT_SCOPE,} from '../config/sync'
+// import { saveEventDataToFile, shouldSaveEventDataToFile } from '../local/saveEventDataToFile'
+// import { decodeContractEvents } from '../utils/decodeEvents'
+// import { updateSyncStatus } from '../core/state'
+// import { persistTruthNFTSync } from '../services/supabase/truthNFTWriter'
+// import { CONTROLLER } from '../controller'
 
-import type { DecodedRuntimeEvent } from '../oasisQuery/app/services/events'
+// import type { DecodedRuntimeEvent } from '../oasisQuery/app/services/events'
 
-export interface FetchTruthNFTEventsResult {
-  outputPath: string | null
-  block_number: number
-  events: DecodedRuntimeEvent<Record<string, unknown>>[]
-}
+// export interface FetchTruthNFTEventsResult {
+//   outputPath: string | null
+//   block_number: number
+//   events: DecodedRuntimeEvent<Record<string, unknown>>[]
+// }
 
-/**
- * Fetch TruthNFT contract events
- * @param scope - Runtime scope
- * @param lastSyncedBlock - Last synced block height (optional), if not provided, uses contract config's startBlock
- */
-export async function fetchTruthNFTEvents(
-  scope: RuntimeScope = DEFAULT_SCOPE,
-  lastSyncedBlock: number,
-): Promise<FetchTruthNFTEventsResult> {
-  console.log(`🌐 Querying TruthNFT events: network=${scope.network}, layer=${scope.layer}`)
+// /**
+//  * Fetch TruthNFT contract events
+//  * @param scope - Runtime scope
+//  * @param lastSyncedBlock - Last synced block height (optional), if not provided, uses contract config's startBlock
+//  */
+// export async function fetchTruthNFTEvents(
+//   scope: RuntimeScope = DEFAULT_SCOPE,
+//   lastSyncedBlock: number,
+// ): Promise<FetchTruthNFTEventsResult> {
+//   console.log(`🌐 Querying TruthNFT events: network=${scope.network}, layer=${scope.layer}`)
 
-  const syncResult = await syncRuntimeContractEvents({
-    scope,
-    contract: ContractName.TRUTH_NFT,
-    limit: Number(process.env.EVENT_SYNC_LIMIT),
-    batchSize: Number(process.env.EVENT_SYNC_BATCH_SIZE),
-    fromRound: lastSyncedBlock,
-  })
+//   const syncResult = await syncRuntimeContractEvents({
+//     scope,
+//     contract: ContractName.TRUTH_NFT,
+//     limit: Number(process.env.EVENT_SYNC_LIMIT),
+//     batchSize: Number(process.env.EVENT_SYNC_BATCH_SIZE),
+//     fromRound: lastSyncedBlock,
+//   })
 
-  // Decode events using unified decoding utility function
-  const decodedEvents = decodeContractEvents(
-    syncResult.fetchResult.rawEvents,
-    ContractName.TRUTH_NFT,
-    scope,
-  )
+//   // Decode events using unified decoding utility function
+//   const decodedEvents = decodeContractEvents(
+//     syncResult.fetchResult.rawEvents,
+//     ContractName.TRUTH_NFT,
+//     scope,
+//   )
 
-  // NOTE: Important to reverse the events to make sure the events are in the right order
-  decodedEvents.reverse()
+//   // NOTE: Important to reverse the events to make sure the events are in the right order
+//   decodedEvents.reverse()
 
-  console.log(`✅ Fetched ${decodedEvents.length} decoded events (total ${syncResult.fetchResult.totalFetched} raw events, fetched ${syncResult.fetchResult.pagesFetched} pages)`)
+//   console.log(`✅ Fetched ${decodedEvents.length} decoded events (total ${syncResult.fetchResult.totalFetched} raw events, fetched ${syncResult.fetchResult.pagesFetched} pages)`)
 
-  // Phase 2: Process each contract independently in a specific order to handle dependencies
-    if (CONTROLLER.writeToSupabase && decodedEvents.length > 0) {
+//   // Phase 2: Process each contract independently in a specific order to handle dependencies
+//     if (CONTROLLER.writeToSupabase && decodedEvents.length > 0) {
       
-      await persistTruthNFTSync(DEFAULT_SCOPE, ContractName.TRUTH_NFT, decodedEvents)
-    }
+//       await persistTruthNFTSync(DEFAULT_SCOPE, ContractName.TRUTH_NFT, decodedEvents)
+//     }
 
-  let outputPath: string | null = null
-  if (shouldSaveEventDataToFile()) {
-    outputPath = await saveEventDataToFile(scope, ContractName.TRUTH_NFT, syncResult)
-  }
+//   let outputPath: string | null = null
+//   if (shouldSaveEventDataToFile()) {
+//     outputPath = await saveEventDataToFile(scope, ContractName.TRUTH_NFT, syncResult)
+//   }
 
-  console.log(`📊 Sync status: from block ${syncResult.cursorBefore.lastBlock} to ${syncResult.cursorAfter.lastBlock}`)
+//   console.log(`📊 Sync status: from block ${syncResult.cursorBefore.lastBlock} to ${syncResult.cursorAfter.lastBlock}`)
 
-  const block_number = syncResult.cursorAfter.lastBlock
+//   const block_number = syncResult.cursorAfter.lastBlock
 
-  // Phase 3: Update sync status
-  if (CONTROLLER.isUpdateLastBlock) {
-    await updateSyncStatus(DEFAULT_SCOPE, ContractName.TRUTH_NFT, block_number)
-  }
+//   // Phase 3: Update sync status
+//   if (CONTROLLER.isUpdateLastBlock) {
+//     await updateSyncStatus(DEFAULT_SCOPE, ContractName.TRUTH_NFT, block_number)
+//   }
 
-  return {
-    outputPath,
-    block_number,
-    events: decodedEvents,
-  }
-}
+//   return {
+//     outputPath,
+//     block_number,
+//     events: decodedEvents,
+//   }
+// }
 

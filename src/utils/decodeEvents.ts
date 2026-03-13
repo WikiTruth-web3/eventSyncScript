@@ -11,6 +11,21 @@ import { decodeRuntimeEvents, type DecodedRuntimeEvent } from '../oasisQuery/app
 import { NETWORK_CONTRACTS } from '../contractsConfig/contracts'
 import { SupportedChainId } from '../contractsConfig/types'
 
+import { base64ToHex } from '../oasisQuery/app/utils/helpers'
+
+/**
+ * Normalize hex string (handles base64 from Nexus)
+ */
+const normalizeHex = (value: any): string | null => {
+    if (typeof value !== 'string') return null
+    if (value.startsWith('0x')) return value.toLowerCase()
+    try {
+        return base64ToHex(value).toLowerCase()
+    } catch {
+        return null
+    }
+}
+
 /**
  * Resolve contract address (reuse existing logic)
  */
@@ -47,18 +62,51 @@ export const decodeContractEvents = <TArgs = Record<string, unknown>>(
         return []
     }
 
-    // Get event signatures
-    const eventSignatures = getContractEventSignatures(contractName)
-    if (!eventSignatures || eventSignatures.length === 0) {
-        console.warn(`⚠️  Contract ${contractName} has no event signature configuration`)
-        return []
-    }
+    const targetAddress = contractAddress.toLowerCase()
+    
+    // Check if manual decoding is enabled (default to true)
+    const enableDecoding = process.env.ENABLE_EVENT_DECODING !== 'false'
 
-    // Decode events
-    const decodedEvents = decodeRuntimeEvents<TArgs>(rawEvents, {
-        contractAddress,
-        eventSignatures,
-    })
+    let decodedEvents: DecodedRuntimeEvent<TArgs>[] = []
+
+    if (enableDecoding) {
+        // Get event signatures
+        const eventSignatures = getContractEventSignatures(contractName)
+        if (!eventSignatures || eventSignatures.length === 0) {
+            console.warn(`⚠️  Contract ${contractName} has no event signature configuration`)
+            return []
+        }
+
+        // Decode events using manual ABI (for Proxy contracts or encrypted events)
+        decodedEvents = decodeRuntimeEvents<TArgs>(rawEvents, {
+            contractAddress,
+            eventSignatures,
+        })
+    } else {
+        // Use Nexus intuitive events (for standard contracts already indexed by Nexus)
+        for (const event of rawEvents) {
+            if (event.type !== 'evm.log') continue
+            
+            const rawAddress = (event.body as any)?.address ?? (event.body as any)?.eth_address ?? (event.body as any)?.contract_address
+            const address = normalizeHex(rawAddress)
+            
+            if (address === targetAddress && (event as any).evm_log_name) {
+                const args: Record<string, unknown> = {}
+                const params = (event as any).evm_log_params || []
+                for (const param of params) {
+                    if (param.name) {
+                        args[param.name] = param.value
+                    }
+                }
+
+                decodedEvents.push({
+                    eventName: (event as any).evm_log_name,
+                    args: args as TArgs,
+                    raw: event,
+                })
+            }
+        }
+    }
 
     // Strip the large body field from raw events to reduce data volume (requested by user)
     return decodedEvents.map(event => {
@@ -68,8 +116,6 @@ export const decodeContractEvents = <TArgs = Record<string, unknown>>(
             raw: rawWithoutBody
         }
     })
-
-
 }
 
 /**
@@ -94,8 +140,7 @@ export const decodeMultiContractEvents = <TArgs = Record<string, unknown>>(
             ContractName.TRUTH_BOX,
             ContractName.EXCHANGE,
             ContractName.FUND_MANAGER,
-            ContractName.USER_ID,
-            ContractName.TRUTH_NFT,
+            ContractName.USER_MANAGER,
         ]
 
         for (const contract of contractsToTry) {

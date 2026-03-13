@@ -2,9 +2,8 @@ import type { RuntimeScope } from '../../oasisQuery/types/searchScope'
 import { getSupabaseClient } from '../../config/supabase'
 import { fetchMetadataBox, MetadataBoxPayload } from '../ipfs/fetchMetadataBox'
 import { sanitizeForSupabase } from '../../utils/getEventArgs'
-import { MetadataBoxPayload_v2, convertV1ToV2 } from '../../utils/metadata/metadataBoxTypes'
 
-const V2_BLOCK_THRESHOLD = 15615554
+// Removed V2_BLOCK_THRESHOLD and v1 conversion logic as per user request to only keep v2.
 
 type MetadataRecord = {
   network: RuntimeScope['network']
@@ -37,12 +36,12 @@ const toISODate = (value?: string): string | null => {
 }
 
 /**
- * Normalize v2 metadata for Supabase storage
+ * Normalize metadata for Supabase storage
  */
 const normalizeMetadataRecord = (
   scope: RuntimeScope,
   boxId: string,
-  metadata: MetadataBoxPayload_v2,
+  metadata: MetadataBoxPayload,
 ): MetadataRecord => {
   // Handle timestamp, ensure BigInt is converted to number
   let timestamp: number | null = null
@@ -98,21 +97,11 @@ export const upsertMetadataFromEvents = async (
   scope: RuntimeScope,
   boxId: string,
   boxInfoCID: string,
-  blockHeight: number,
 ) => {
   try {
-    let metadata = await fetchMetadataBox(boxInfoCID)
-    
-    // Check if we need to convert from v1 to v2 based on block height
-    let finalMetadata: MetadataBoxPayload_v2
-    if (blockHeight < V2_BLOCK_THRESHOLD) {
-      console.log(`📦 Block ${blockHeight} is below threshold ${V2_BLOCK_THRESHOLD}, converting metadata v1 -> v2`)
-      finalMetadata = convertV1ToV2(metadata as any) // Typecast since union might be v1 or already v2
-    } else {
-      finalMetadata = metadata as MetadataBoxPayload_v2
-    }
+    const metadata = await fetchMetadataBox(boxInfoCID)
 
-    const record = normalizeMetadataRecord(scope, boxId, finalMetadata)
+    const record = normalizeMetadataRecord(scope, boxId, metadata)
     console.log(`✅ Successfully normalized metadata for box ${boxId}`)
 
     const supabase = getSupabaseClient()

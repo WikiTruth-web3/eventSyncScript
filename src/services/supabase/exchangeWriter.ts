@@ -8,7 +8,6 @@ import { getSupabaseClient } from '../../config/supabase'
 import { getEventArgAsString, sanitizeForSupabase } from '../../utils/getEventArgs'
 import type { DecodedRuntimeEvent } from '../../oasisQuery/app/services/events'
 import { extractTimestamp } from '../../utils/extractTimestamp'
-import { fixEventErrorParam_BidPlaced, fixEventErrorParam_BoxPurchased } from '../../utils/fixEventsErrorParam'
 import { getBoolean } from '../../utils/getBoolean'
 
 /**
@@ -83,9 +82,7 @@ export const handleBoxPurchased = async (
     event: DecodedRuntimeEvent<Record<string, unknown>>,
 ): Promise<void> => {
     const boxId = getEventArgAsString(event, 'boxId')
-    const userId_orignal = getEventArgAsString(event, 'userId')
-    // NOTE: fixEventErrorParam_BoxPurchased
-    const userId = fixEventErrorParam_BoxPurchased(event, 'userId', userId_orignal || '')
+    const userId = getEventArgAsString(event, 'userId')
 
     if (!boxId || !userId) return
 
@@ -107,9 +104,7 @@ export const handleBidPlaced = async (
 ): Promise<void> => {
     const boxId = getEventArgAsString(event, 'boxId')
     const timestamp = extractTimestamp(event)
-    const userId_orignal = getEventArgAsString(event, 'userId')
-    // NOTE: fixEventErrorParam_BidPlaced
-    const userId = fixEventErrorParam_BidPlaced(event, 'userId', userId_orignal || '')
+    const userId = getEventArgAsString(event, 'userId')
 
     // Only skip if boxId or userId is undefined (0 is a valid value)
     if (boxId === undefined || userId === undefined) {

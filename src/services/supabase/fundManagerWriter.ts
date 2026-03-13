@@ -202,61 +202,10 @@ export const handleRewardsAdded = async (
 
 
 /**
- * Handle HelperRewrdsWithdraw event
- * Insert into withdraws table (withdraw_type: 'Helper')
+ * Handle RewardsWithdraw event
+ * Insert into withdraws table (withdraw_type: 'Reward')
  */
-export const handleHelperRewardsWithdraw = async (
-    scope: RuntimeScope,
-    event: DecodedRuntimeEvent<Record<string, unknown>>,
-): Promise<void> => {
-    const userId = getEventArgAsString(event, 'userId')
-    const token = getEventArgAsString(event, 'token')
-    const amount = getEventArgAsString(event, 'amount')
-
-    if (!userId || !token || !amount) return
-
-    const supabase = getSupabaseClient()
-    const timestamp = extractTimestamp(event)
-    const recordId = generateRecordId(event)
-    const txHash = normalizeHash(event.raw.tx_hash ?? event.raw.eth_tx_hash)
-    const blockNumber = event.raw.round ?? 0
-
-    if (!txHash) return
-
-    const withdrawData = sanitizeForSupabase({
-        network: scope.network,
-        layer: scope.layer,
-        id: recordId,
-        token: token.toLowerCase(),
-        box_list: [], // Helper and Minter is not list
-        user_id: userId,
-        amount: amount,
-        timestamp: timestamp,
-        withdraw_type: 'Helper',
-        transaction_hash: hashToBytea(txHash),
-        block_number: String(blockNumber),
-    }) as Record<string, unknown>
-
-    const { error } = await supabase
-        .from('withdraws')
-        .upsert(withdrawData, {
-            onConflict: 'network,layer,id'
-        })
-
-    if (error) {
-        console.error(`❌ Failed to insert helper reward withdraw for user ${userId}:`, error.message)
-        console.error(`   Error info:`, JSON.stringify(error, null, 2))
-    } else {
-        console.log(`✅ Inserted helper reward withdraw for user ${userId}`)
-    }
-}
-
-
-/**
- * Handle MinterRewardsWithdraw event
- * Insert into withdraws table (withdraw_type: 'Minter')
- */
-export const handleMinterRewardsWithdraw = async (
+export const handleRewardsWithdraw = async (
     scope: RuntimeScope,
     event: DecodedRuntimeEvent<Record<string, unknown>>,
 ): Promise<void> => {
@@ -283,7 +232,7 @@ export const handleMinterRewardsWithdraw = async (
         user_id: userId,
         amount: amount,
         timestamp: timestamp,
-        withdraw_type: 'Minter',
+        withdraw_type: 'Reward',
         transaction_hash: hashToBytea(txHash),
         block_number: String(blockNumber),
     }) as Record<string, unknown>
@@ -295,10 +244,38 @@ export const handleMinterRewardsWithdraw = async (
         })
 
     if (error) {
-        console.error(`❌ Failed to insert minter reward withdraw for user ${userId}:`, error.message)
-        console.error(`   Error info:`, JSON.stringify(error, null, 2))
+        console.error(`❌ Failed to insert reward withdraw for user ${userId}:`, error.message)
     } else {
-        console.log(`✅ Inserted minter reward withdraw for user ${userId}`)
+        console.log(`✅ Inserted reward withdraw for user ${userId}`)
+    }
+}
+
+/**
+ * Handle Paused / Unpaused events for FundManager
+ * Update fund_manager_state table
+ */
+export const handleFundManagerState = async (
+    scope: RuntimeScope,
+    event: DecodedRuntimeEvent<Record<string, unknown>>,
+): Promise<void> => {
+    const supabase = getSupabaseClient()
+    const isPaused = event.eventName === 'Paused'
+
+    const { error } = await supabase
+        .from('fund_manager_state')
+        .upsert({
+            network: scope.network,
+            layer: scope.layer,
+            id: 'fundManager',
+            paused: isPaused,
+        }, {
+            onConflict: 'network,layer,id',
+        })
+
+    if (error) {
+        console.warn(`⚠️  Failed to update fund_manager_state (paused=${isPaused}):`, error.message)
+    } else {
+        console.log(`✅ Updated fund_manager_state (paused=${isPaused})`)
     }
 }
 
@@ -331,10 +308,6 @@ export const ensureFundManagerStateExists = async (scope: RuntimeScope): Promise
 
 /**
  * Process FundManager contract events and write to Supabase
- * Internal Priority (per rules.md):
- * 1. OrderAmountPaid
- * 2. RewardsAdded
- * 3. Others (OrderAmountWithdraw, HelperRewrdsWithdraw, MinterRewardsWithdraw)
  */
 export const persistFundManagerSync = async (
     scope: RuntimeScope,
@@ -348,7 +321,7 @@ export const persistFundManagerSync = async (
 
     if (contract !== ContractName.FUND_MANAGER) return 
 
-    // ✅ First ensure fund_manager_state record exists (required by payments trigger)
+    // ✅ First ensure fund_manager_state record exists
     await ensureFundManagerStateExists(scope)
 
     // ✅ Then ensure users records exist
@@ -379,11 +352,12 @@ export const persistFundManagerSync = async (
             case 'OrderAmountWithdraw':
                 await handleOrderAmountWithdraw(scope, event)
                 break
-            case 'HelperRewrdsWithdraw':
-                await handleHelperRewardsWithdraw(scope, event)
+            case 'RewardsWithdraw':
+                await handleRewardsWithdraw(scope, event)
                 break
-            case 'MinterRewardsWithdraw':
-                await handleMinterRewardsWithdraw(scope, event)
+            case 'Paused':
+            case 'Unpaused':
+                await handleFundManagerState(scope, event)
                 break
         }
     }

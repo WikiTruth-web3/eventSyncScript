@@ -9,7 +9,6 @@ import type { DecodedRuntimeEvent } from '../../oasisQuery/app/services/events'
 import { extractTimestamp } from '../../utils/extractTimestamp'
 import { upsertMetadataFromEvents } from './metadataWriter'
 import { CONTROLLER } from '../../controller'
-import { fixEventErrorParam_BoxCreated } from '../../utils/fixEventsErrorParam'
 
 /**
  * Handle BoxCreated event, create boxes record
@@ -24,8 +23,7 @@ export const handleBoxCreated = async (
 
     // Use common utility to safely extract event parameters (correctly handle 0 values)
     const boxId = getEventArgAsString(event, 'boxId')
-    const userId_orignal = getEventArgAsString(event, 'userId')
-    const userId = fixEventErrorParam_BoxCreated(event, 'userId', userId_orignal || '')
+    const userId = getEventArgAsString(event, 'userId')
     const boxInfoCID = getEventArgAsString(event, 'boxInfoCID') // New contract includes this parameter
 
     // Only skip if boxId or userId is undefined (0 is a valid value)
@@ -78,14 +76,13 @@ export const handleBoxCreated = async (
     }
 
     if (
-        CONTROLLER.writeList.includes('metadataBox') && 
+        CONTROLLER.queryList.includes('metadataBox') && 
         CONTROLLER.writeToSupabase
     ) {
         // write metadata
         if (boxInfoCID) {
             // get metadata from ipfs
-            const blockHeight = event.raw.round ?? 0
-            await upsertMetadataFromEvents(scope, boxId, boxInfoCID, blockHeight)
+            await upsertMetadataFromEvents(scope, boxId, boxInfoCID)
         }
     }
 

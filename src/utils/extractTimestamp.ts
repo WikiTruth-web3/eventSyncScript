@@ -13,8 +13,6 @@ export const extractTimestamp = (event: DecodedRuntimeEvent<Record<string, unkno
     }
 
     return String(timestamp/1000)
-
-
 }
 
 

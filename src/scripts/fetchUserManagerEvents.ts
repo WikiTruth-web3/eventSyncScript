@@ -5,31 +5,31 @@ import { DEFAULT_SCOPE,} from '../config/sync'
 import { saveEventDataToFile, shouldSaveEventDataToFile } from '../local/saveEventDataToFile'
 import { decodeContractEvents } from '../utils/decodeEvents'
 import { updateSyncStatus } from '../core/state'
-import { persistUserIdSync } from '../services/supabase/userIdWriter'
+import { persistUserManagerSync } from '../services/supabase/userManagerWriter'
 import { CONTROLLER } from '../controller'
 
 import type { DecodedRuntimeEvent } from '../oasisQuery/app/services/events'
 
-export interface FetchUserIdEventsResult {
+export interface FetchUserManagerEventsResult {
     outputPath: string | null
     block_number: number
     events: DecodedRuntimeEvent<Record<string, unknown>>[]
 }
 
 /**
- * Fetch UserId contract events
+ * Fetch UserManager contract events
  * @param scope - Runtime scope
  * @param lastSyncedBlock - Last synced block height (optional), if not provided, uses contract config's startBlock
  */
-export async function fetchUserIdEvents(
+export async function fetchUserManagerEvents(
     scope: RuntimeScope = DEFAULT_SCOPE,
     lastSyncedBlock: number,
-): Promise<FetchUserIdEventsResult> {
-    console.log(`🌐 Querying UserId events: network=${scope.network}, layer=${scope.layer}`)
+): Promise<FetchUserManagerEventsResult> {
+    console.log(`🌐 Querying UserManager events: network=${scope.network}, layer=${scope.layer}`)
 
     const syncResult = await syncRuntimeContractEvents({
         scope,
-        contract: ContractName.USER_ID,
+        contract: ContractName.USER_MANAGER,
         limit: Number(process.env.EVENT_SYNC_LIMIT),
         batchSize: Number(process.env.EVENT_SYNC_BATCH_SIZE),
         fromRound: lastSyncedBlock,
@@ -38,23 +38,23 @@ export async function fetchUserIdEvents(
     // Decode events using unified decoding utility function
     const decodedEvents = decodeContractEvents(
         syncResult.fetchResult.rawEvents,
-        ContractName.USER_ID,
+        ContractName.USER_MANAGER,
         scope,
     )
 
     // NOTE: Important to reverse the events to make sure the events are in the right order
     decodedEvents.reverse()
 
-    console.log(`✅ Fetched ${decodedEvents.length} decoded events (total ${syncResult.fetchResult.totalFetched} raw events, fetched ${syncResult.fetchResult.pagesFetched} pages)`)
+    console.log(`✅ Fetched ${decodedEvents.length} decoded events for UserManager`)
 
     // Phase 2: Process each contract independently in a specific order to handle dependencies
     if (CONTROLLER.writeToSupabase && decodedEvents.length > 0) {
-        await persistUserIdSync(DEFAULT_SCOPE, ContractName.USER_ID, decodedEvents)
+        await persistUserManagerSync(DEFAULT_SCOPE, ContractName.USER_MANAGER, decodedEvents)
     }
 
     let outputPath: string | null = null
     if (shouldSaveEventDataToFile()) {
-        outputPath = await saveEventDataToFile(scope, ContractName.USER_ID, syncResult)
+        outputPath = await saveEventDataToFile(scope, ContractName.USER_MANAGER, syncResult)
     }
 
     console.log(`📊 Sync status: from block ${syncResult.cursorBefore.lastBlock} to ${syncResult.cursorAfter.lastBlock}`)
@@ -63,7 +63,7 @@ export async function fetchUserIdEvents(
 
     // Phase 3: Update sync status
     if (CONTROLLER.isUpdateLastBlock) {
-      await updateSyncStatus(DEFAULT_SCOPE, ContractName.USER_ID, block_number)
+      await updateSyncStatus(DEFAULT_SCOPE, ContractName.USER_MANAGER, block_number)
     }
 
     return {

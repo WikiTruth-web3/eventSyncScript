@@ -208,17 +208,13 @@ export const getAllContractsSyncData = async (
 
     // Create a mapping, initialized to all contracts are null
     const result: Record<ContractName, SyncStatusData | null> = {
+      [ContractName.FORWARDER]: null,
       [ContractName.TRUTH_BOX]: null,
-      [ContractName.TRUTH_NFT]: null,
       [ContractName.EXCHANGE]: null,
       [ContractName.FUND_MANAGER]: null,
-      [ContractName.USER_ID]: null,
+      [ContractName.USER_MANAGER]: null,
       [ContractName.ADDRESS_MANAGER]: null,
       [ContractName.SIWE_AUTH]: null,
-      [ContractName.OFFICIAL_TOKEN]: null,
-      [ContractName.OFFICIAL_TOKEN_SECRET]: null,
-      [ContractName.WROSE_SECRET]: null,
-      [ContractName.ERC20_SECRET]: null,
     }
 
     // Fill data read from database

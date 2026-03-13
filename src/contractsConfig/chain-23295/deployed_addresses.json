@@ -1,10 +1,10 @@
 {
   
-  "AddressManager_Proxy": "0x7609F2617c6e4A8757809dB67a7EAd55A5B33195",
-  "Exchange_Proxy":"0xFD4C4CFA8B1dF3aF3F7a07A630B2FbBa6b45b40d",
-  "FundManager_Proxy":"0x28FE0c45e9730a89ABDdD4DC817b532F802Fe1E3",
-  "TruthBox_Proxy":"0x1aec0197b0Ddc0412393813F863382748Da5C01e",
-  "TruthNFT_Proxy":"0x4994C64ABC6A7BAE72C3b58133F8AAAB4dF1CbE7",
-  "UserId_Proxy":"0xB1F04fB48490F3B37D5FEe3731c140dbF2224F5e"
+  "AddressManager": "",
+  "Forwarder": "",
+  "Exchange":"",
+  "FundManager":"",
+  "TruthBox":"",
+  "UserManager":""
 }
 

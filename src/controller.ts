@@ -2,11 +2,10 @@
 export type QueryListType = 
   | 'metadataBox' 
   | 'truthBox' 
-  | 'truthNFT' 
   | 'exchange' 
   | 'fundManager' 
-  | 'userId' ;
-
+  | 'userManager' 
+  | 'forwarder';
 
 export interface CommonType {
     writeToSupabase: boolean;
@@ -24,7 +23,6 @@ const COMMON_CONSTANT = {
     isUpdateLastBlock: false,
 }
 
-
 const controller = (list: QueryListType[]): CommonType => {
     return {
         ...COMMON_CONSTANT,
@@ -32,16 +30,12 @@ const controller = (list: QueryListType[]): CommonType => {
     }
 }
 
-
-
-
-
 // You can change the mode here to control the entire script behavior
 export const CONTROLLER = controller([
   'metadataBox',
   'truthBox',
-  'truthNFT',
   'exchange',
   'fundManager',
-  'userId',
+  'userManager',
+  'forwarder',
 ]);
