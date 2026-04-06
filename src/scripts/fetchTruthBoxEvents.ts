@@ -47,7 +47,6 @@ export async function fetchTruthBoxEvents(
 
   console.log(`✅ Fetched ${decodedEvents.length} decoded events (total ${syncResult.fetchResult.totalFetched} raw events, fetched ${syncResult.fetchResult.pagesFetched} pages)`)
 
-
   // Phase 2: Process each contract independently in a specific order to handle dependencies
   if (CONTROLLER.writeToSupabase && decodedEvents.length > 0) {
     await persistTruthBoxSync(DEFAULT_SCOPE, ContractName.TRUTH_BOX, decodedEvents)

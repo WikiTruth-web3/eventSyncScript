@@ -1,6 +1,7 @@
 import type { RuntimeScope } from '../../oasisQuery/types/searchScope'
 import { getSupabaseClient } from '../../config/supabase'
-import { fetchMetadataBox, MetadataBoxPayload } from '../ipfs/fetchMetadataBox'
+import { fetchMetadataBox } from '../ipfs/fetchMetadataBox'
+import type { MetadataBoxPayload } from '../ipfs/fetchMetadataBox'
 import { sanitizeForSupabase } from '../../utils/getEventArgs'
 
 // Removed V2_BLOCK_THRESHOLD and v1 conversion logic as per user request to only keep v2.

@@ -1,0 +1,116 @@
+{
+  "fetchedAt": "2026-04-06T05:04:17.110Z",
+  "scope": {
+    "network": "testnet",
+    "layer": "sapphire"
+  },
+  "contract": "TRUTH_BOX",
+  "cursorBefore": {
+    "lastBlock": 16468729,
+    "lastTimestamp": "2026-04-05T15:14:23+00:00"
+  },
+  "cursorAfter": {
+    "lastBlock": 16468729,
+    "lastLogIndex": 1,
+    "lastTimestamp": "2026-04-05T15:14:23Z",
+    "lastEventId": "9e63111c1affccf6d776a2504dd94176cadddaaad0b2f3ff70375563628f6632"
+  },
+  "pagesFetched": 1,
+  "totalFetched": 3,
+  "eventCount": 3,
+  "rawEvents": [
+    {
+      "body": {
+        "address": "jbdxNzB3IlrrWvffypujMYW6DbM=",
+        "data": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAO2JhZmtyZWlkMzZ6eXF1bW1rdml2aGhjY3EycHJ2YzVzZWJtejV6YmNrMjNpeW1rdHB2dWJvYWhtYm9pAAAAAAA=",
+        "topics": [
+          "b4tyqfTeLQEseP5E5NEohWzeNZM4MoJB6DrRuF8eeFs=",
+          "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQ=",
+          "RTFKkksJBQ6i10xw/u73T/C3DynGP43bg/lLNetFVhc="
+        ]
+      },
+      "eth_tx_hash": "d47527cf18eabdd546b90af7f80ca64978c38ace39c8eb8163a05983f1a9a1de",
+      "evm_log_name": "BoxCreated",
+      "evm_log_params": [
+        {
+          "evm_type": "uint256",
+          "name": "boxId",
+          "value": "4"
+        },
+        {
+          "evm_type": "bytes32",
+          "name": "userId",
+          "value": "0x45314a924b09050ea2d74c70feeef74ff0b70f29c63f8ddb83f94b35eb455617"
+        },
+        {
+          "evm_type": "string",
+          "name": "boxInfoCID",
+          "value": "bafkreid36zyqummkvivhhccq2prvc5sebmz5zbck23iymktpvuboahmboi"
+        }
+      ],
+      "round": 16468729,
+      "timestamp": "2026-04-05T15:14:23Z",
+      "tx_hash": "9e63111c1affccf6d776a2504dd94176cadddaaad0b2f3ff70375563628f6632",
+      "tx_index": 1,
+      "type": "evm.log"
+    },
+    {
+      "body": {
+        "address": "jbdxNzB3IlrrWvffypujMYW6DbM=",
+        "data": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAGnmQsk=",
+        "topics": [
+          "tQtJk46RWwqznpmi0IEOGQ1qN3ZH7wbsRbHlS4kpaKY=",
+          "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQ="
+        ]
+      },
+      "eth_tx_hash": "d47527cf18eabdd546b90af7f80ca64978c38ace39c8eb8163a05983f1a9a1de",
+      "evm_log_name": "DeadlineChanged",
+      "evm_log_params": [
+        {
+          "evm_type": "uint256",
+          "name": "boxId",
+          "value": "4"
+        },
+        {
+          "evm_type": "uint256",
+          "name": "deadline",
+          "value": "1776698057"
+        }
+      ],
+      "round": 16468729,
+      "timestamp": "2026-04-05T15:14:23Z",
+      "tx_hash": "9e63111c1affccf6d776a2504dd94176cadddaaad0b2f3ff70375563628f6632",
+      "tx_index": 1,
+      "type": "evm.log"
+    },
+    {
+      "body": {
+        "address": "jbdxNzB3IlrrWvffypujMYW6DbM=",
+        "data": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAIIasNRBSYAAA=",
+        "topics": [
+          "iqT6UmSKbRXtzooXnHkshvNxnQzDxXLPkPkZSPDyy2g=",
+          "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQ="
+        ]
+      },
+      "eth_tx_hash": "d47527cf18eabdd546b90af7f80ca64978c38ace39c8eb8163a05983f1a9a1de",
+      "evm_log_name": "PriceChanged",
+      "evm_log_params": [
+        {
+          "evm_type": "uint256",
+          "name": "boxId",
+          "value": "4"
+        },
+        {
+          "evm_type": "uint256",
+          "name": "price",
+          "value": "150000000000000000000"
+        }
+      ],
+      "round": 16468729,
+      "timestamp": "2026-04-05T15:14:23Z",
+      "tx_hash": "9e63111c1affccf6d776a2504dd94176cadddaaad0b2f3ff70375563628f6632",
+      "tx_index": 1,
+      "type": "evm.log"
+    }
+  ]
+}

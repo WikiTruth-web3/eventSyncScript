@@ -28,6 +28,7 @@ export const IPFS_GATEWAY_CONFIG = {
 
 
 export const IPFS_GATEWAY_URLS = [
+    'https://tomato-adjacent-woodpecker-26.mypinata.cloud/ipfs/{cid}',
     'https://ipfs.io/ipfs/{cid}',
     'https://gateway.pinata.cloud/ipfs/{cid}',
     'https://cloudflare-ipfs.com/ipfs/{cid}',

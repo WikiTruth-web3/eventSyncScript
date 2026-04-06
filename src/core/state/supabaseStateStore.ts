@@ -66,42 +66,6 @@ export const getSyncCursor = async (key: ContractSyncKey): Promise<SyncCursor> =
 }
 
 /**
- * Update sync status of Supabase sync_status table
- * Note: Here we update the last_synced_block of the specific contract
- */
-export const updateSyncCursor = async (key: ContractSyncKey, cursor: SyncCursor): Promise<void> => {
-  try {
-    const supabase = getSupabaseClient()
-
-    const { error } = await supabase
-      .from('sync_status')
-      .upsert(
-        {
-          network: key.network,
-          layer: key.layer,
-          contract_name: key.contract,
-          last_synced_block: cursor.lastBlock.toString(),
-          last_synced_at: cursor.lastTimestamp || new Date().toISOString(),
-        },
-        {
-          onConflict: 'network,layer,contract_name',
-        },
-      )
-
-    if (error) {
-      console.warn(`⚠️  Failed to update Supabase sync status:`, error.message)
-      throw error
-    }
-  } catch (error) {
-    console.warn(
-      `⚠️  Failed to update Supabase sync status:`,
-      error instanceof Error ? error.message : String(error),
-    )
-    // Do not throw error, allow continue execution
-  }
-}
-
-/**
  * Update sync status of Supabase sync_status table (accept RuntimeScope and contract name)
  * Used in main entry file, update sync status of specific contract
  */
@@ -223,7 +187,7 @@ export const getAllContractsSyncData = async (
         const contractName = item.contract_name as ContractName
         if (contractName in result) {
           result[contractName] = {
-            last_synced_block: Number(item.last_synced_block) || 0,
+            last_synced_block: Number(item.last_synced_block) || 0, 
             last_synced_at: item.last_synced_at,
           }
         }

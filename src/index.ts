@@ -6,14 +6,14 @@ import { fetchFundManagerEvents } from './scripts/fetchFundManagerEvents'
 import { fetchUserManagerEvents } from './scripts/fetchUserManagerEvents'
 import { fetchForwarderEvents } from './scripts/fetchForwarderEvents'
 import { DEFAULT_SCOPE } from './config/sync'
-import { getAllContractsSyncData, updateSyncStatus } from './core/state'
+import { getAllContractsSyncData,} from './core/state'
 import { ContractName } from './contractsConfig/types'
 import { CONTROLLER } from './controller'
 
 async function main() {
   try {
 
-    const default_start_block = 14458354
+    const default_start_block = 16435046
     
     let truthBoxLastBlock = default_start_block
     let exchangeLastBlock = default_start_block
@@ -29,6 +29,11 @@ async function main() {
       fundManagerLastBlock = allSyncData[ContractName.FUND_MANAGER]?.last_synced_block || default_start_block
       userManagerLastBlock = allSyncData[ContractName.USER_MANAGER]?.last_synced_block || default_start_block
       forwarderLastBlock = allSyncData[ContractName.FORWARDER]?.last_synced_block || default_start_block
+      truthBoxLastBlock += 1
+      exchangeLastBlock += 1
+      fundManagerLastBlock += 1
+      userManagerLastBlock += 1
+      forwarderLastBlock += 1
     }
 
     // Fetch events from contracts according to current mode

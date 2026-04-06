@@ -3,7 +3,7 @@ import type { RuntimeScope } from '../../oasisQuery/types/searchScope'
 import type { RuntimeEvent } from '../../oasisQuery/oasis-nexus/api'
 import { fetchRuntimeContractEvents } from '../events'
 import type { EventFetchResult } from '../events/types'
-import { getSyncCursor, updateSyncCursor } from '../state'
+import { getSyncCursor } from '../state'
 import type { ContractSyncKey, SyncCursor } from '../state'
 
 export interface RuntimeContractSyncOptions {
@@ -96,11 +96,7 @@ export const syncRuntimeContractEvents = async <TArgs = Record<string, unknown>>
       }
     : cursor
 
-  // Only update cursor if events were actually processed
-  if (latestRawEvent) {
-    await updateSyncCursor(cursorKey, nextCursor)
-  }
-
+  // Result: return cursor before and after block range fetched
   return {
     cursorBefore: cursor, // Return cursor before script started
     cursorAfter: nextCursor, // Return cursor after script finished
