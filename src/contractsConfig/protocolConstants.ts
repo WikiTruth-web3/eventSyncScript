@@ -11,7 +11,7 @@ export interface ProtocolConstants {
     postCompletionPrivacyPeriod: number; // The privacy period added after the transaction is completed (seconds)
 
     refundRequestPeriod: number; // The buyer's refund request period (seconds)
-    refundReviewPeriod: number; // The DAO's review period for refunds (seconds)
+    arbitrationPeriod: number; // The DAO's review period for refunds (seconds)
     
     deadlineExtensionWindow: number; // The time window for extending the deadline within the deadline (seconds)
     minterPrivacyExtension: number; // The maximum privacy period that the minter can extend for each unsold box (seconds)
@@ -32,7 +32,7 @@ export const SAPPHIRE_TESTNET: ProtocolConstants = {
     postCompletionPrivacyPeriod: 5 * 24 * 3600, 
 
     refundRequestPeriod: 7 * 24 * 3600, 
-    refundReviewPeriod: 7 * 24 * 3600,
+    arbitrationPeriod: 7 * 24 * 3600,
 
     deadlineExtensionWindow: 3 * 24 * 3600,
     minterPrivacyExtension: 15 * 24 * 3600, 
@@ -53,7 +53,7 @@ export const SAPPHIRE_MAINNET: ProtocolConstants = {
     postCompletionPrivacyPeriod: 30 * 24 * 3600,
 
     refundRequestPeriod: 7 * 24 * 3600,
-    refundReviewPeriod: 15 * 24 * 3600,
+    arbitrationPeriod: 15 * 24 * 3600,
 
     deadlineExtensionWindow: 30 * 24 * 3600,
     minterPrivacyExtension: 365 * 24 * 3600,
