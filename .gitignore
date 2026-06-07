@@ -23,6 +23,6 @@ Thumbs.db
 
 # markdown
 tmp.txt
-docs/
+# docs/
 rules/
 *log.md

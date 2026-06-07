@@ -1,58 +1,83 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 
-/**
- *         ██╗    ██╗██╗██╗  ██╗██╗    ████████╗██████╗ ██╗   ██╗████████╗██╗  ██╗
- *         ██║    ██║██║██║ ██╔╝██║    ╚══██╔══╝██╔══██╗██║   ██║╚══██╔══╝██║  ██║
- *         ██║ █╗ ██║██║█████╔╝ ██║       ██║   ██████╔╝██║   ██║   ██║   ███████║
- *         ██║███╗██║██║██╔═██╗ ██║       ██║   ██╔══██╗██║   ██║   ██║   ██╔══██║
- *         ╚███╔███╔╝██║██║  ██╗██║       ██║   ██║  ██║╚██████╔╝   ██║   ██║  ██║
- *          ╚══╝╚══╝ ╚═╝╚═╝  ╚═╝╚═╝       ╚═╝   ╚═╝  ╚═╝ ╚═════╝    ╚═╝   ╚═╝  ╚═╝
- *
- *  ┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
- *  ┃                        Website: https://wikitruth.eth.limo/                         ┃
- *  ┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
- */
-
 pragma solidity ^0.8.24;
 
-interface AllEvents_wikitruth {
-    // ================================ Exchange ===================================
-    event BoxListed(
+// ====================
+enum BoxStatus {
+    Storing,
+    Selling,
+    Auctioning,
+    Paid,
+    Delaying,
+    Refunding,
+    Published,
+    Blacklisted
+}
+enum PayType {
+    OrderAmount,
+    DelayFee
+}
+
+enum FundType {
+    Order,
+    Refund
+}
+
+interface AllEvents {
+    // ========== BlindBox ==========
+    event BoxCreated(
         uint256 indexed boxId,
         bytes32 indexed userId,
+        string boxInfoCID
+    );
+    event BoxStatusChanged(uint256 indexed boxId, BoxStatus status);
+    event PriceChanged(uint256 indexed boxId, uint256 price);
+    event DeadlineChanged(uint256 indexed boxId, uint256 deadline);
+
+    // ========== Exchange ==========
+    event BoxListed(
+        uint256 indexed boxId,
+        bytes32 userId,
         address acceptedToken
     );
     event BoxPurchased(uint256 indexed boxId, bytes32 indexed userId);
     event BidPlaced(uint256 indexed boxId, bytes32 indexed userId);
     event CompleterAssigned(uint256 indexed boxId, bytes32 indexed userId);
     event RequestDeadlineChanged(uint256 indexed boxId, uint256 deadline);
-    event ReviewDeadlineChanged(uint256 indexed boxId, uint256 deadline);
+    event ArbitrationDeadineChanged(uint256 indexed boxId, uint256 deadline);
     event RefundPermitChanged(uint256 indexed boxId, bool permission);
 
-    // ================================== FundManager ===================================
-    event OrderAmountPaid(
+    // ========== FundManager ==========
+    event Payment(
         uint256 indexed boxId,
         bytes32 indexed userId,
         address indexed token,
-        uint256 amount
+        uint256 amount,
+        PayType pt
     );
 
     event OrderAmountWithdraw(
         uint256[] list,
         address indexed token,
         bytes32 indexed userId,
-        uint256 amount,
-        FundsType fundsType
+        uint256 amount
     );
 
-    event RewardsAdded(
-        uint256 indexed boxId,
+    event RefundAmountWithdraw(
+        uint256[] list,
         address indexed token,
-        uint256 amount,
-        RewardType rewardType
+        bytes32 indexed userId,
+        uint256 amount
     );
 
-    event RewrdsWithdraw(
+    event RewardAdded(
+        uint256 indexed boxId,
+        bytes32 indexed userId,
+        address indexed token,
+        uint256 amount
+    );
+
+    event RewardWithdraw(
         bytes32 indexed userId,
         address indexed token,
         uint256 amount
@@ -61,48 +86,13 @@ interface AllEvents_wikitruth {
     // event Paused(address indexed account);
     // event Unpaused(address indexed account);
 
-    // ============================== TruthBox ===================================
-    event BoxCreated(
-        uint256 indexed boxId,
-        bytes32 indexed userId,
-        string boxInfoCID
-    );
-    event BoxStatusChanged(uint256 indexed boxId, Status status);
-    event PriceChanged(uint256 indexed boxId, uint256 price);
-    event DeadlineChanged(uint256 indexed boxId, uint256 deadline);
-    event PrivateKeyPublished(
-        uint256 boxId,
-        bytes privateKey,
-        bytes32 indexed userId
-    );
 
-    // ============================== UserManager ===================================
+    // ========== UserManager ==========
     event Blacklisted(address user, bool status);
 
-    // ============================== Forwarder ===================================
+    //============ Forwarder ============
     event Paused(address indexed account);
     event Unpaused(address indexed account);
 
-    // =============================================================================
-    enum Status {
-        Storing,
-        Selling,
-        Auctioning,
-        Paid,
-        Refunding,
-        InSecrecy,
-        Published,
-        Blacklisted
-    }
-    enum RewardType {
-        Minter,
-        Seller,
-        Completer,
-        Total
-    }
-    enum FundsType {
-        Order,
-        Refund
-    }
-    // enum TokenEnum { UnExsited, Active, Inactive }
+
 }

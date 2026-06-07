@@ -185,7 +185,7 @@ export const persistTruthBoxSync = async (
     contract: ContractName,
     events: DecodedRuntimeEvent<any>[],
 ): Promise<void> => {
-    if (contract !== ContractName.TRUTH_BOX) return
+    if (contract !== ContractName.BLIND_BOX) return
 
     // 1. Ensure all relevant users exist first (optional but good practice)
     await ensureUserIdExist(scope, events)

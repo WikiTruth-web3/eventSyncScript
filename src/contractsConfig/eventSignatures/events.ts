@@ -7,25 +7,24 @@ export const CONTRACT_EVENT_SIGNATURES: Record<ContractName, string[]> = {
         'event Unpaused(address indexed account)',
     ],
     [ContractName.EXCHANGE]: [
-        'event BoxListed(uint256 indexed boxId, bytes32 indexed userId, address acceptedToken)',
-        'event BoxPurchased(uint256 indexed boxId, uint256 indexed userId)',
-        'event BidPlaced(uint256 indexed boxId, uint256 indexed userId)',
-        'event CompleterAssigned(uint256 indexed boxId, uint256 indexed userId)',
+        'event BoxListed(uint256 indexed boxId, bytes32 userId, address acceptedToken)',
+        'event BoxPurchased(uint256 indexed boxId, bytes32 indexed userId)',
+        'event BidPlaced(uint256 indexed boxId, bytes32 indexed userId)',
+        'event CompleterAssigned(uint256 indexed boxId, bytes32 indexed userId)',
         'event RequestDeadlineChanged(uint256 indexed boxId, uint256 deadline)',
-        'event ReviewDeadlineChanged(uint256 indexed boxId, uint256 deadline)',
+        'event ArbitrationDeadineChanged(uint256 indexed boxId, uint256 deadline)',
         'event RefundPermitChanged(uint256 indexed boxId, bool permission)',
     ],
 
     [ContractName.FUND_MANAGER]: [
-        'event OrderAmountPaid(uint256 indexed boxId, bytes32 indexed userId, address indexed token, uint256 amount)',
-        'event OrderAmountWithdraw(uint256[] list, address indexed token, bytes32 indexed userId, uint256 amount, uint8 fundsType)',
-        'event RewardsAdded(uint256 indexed boxId, address indexed token, uint256 amount, uint8 rewardType)',
-        'event RewardsWithdraw(bytes32 indexed userId, address indexed token, uint256 amount)',
-        'event Paused(address indexed account)',
-        'event Unpaused(address indexed account)',
+        'event Payment(uint256 indexed boxId, bytes32 indexed userId, address indexed token, uint256 amount, uint8 pt)',
+        'event OrderAmountWithdraw(uint256[] list, address indexed token, bytes32 indexed userId, uint256 amount)',
+        'event RefundAmountWithdraw(uint256[] list, address indexed token, bytes32 indexed userId, uint256 amount)',
+        'event RewardAdded(uint256 indexed boxId, bytes32 indexed userId, address indexed token, uint256 amount)',
+        'event RewardWithdraw(bytes32 indexed userId, address indexed token, uint256 amount)',
     ],
 
-    [ContractName.TRUTH_BOX]: [
+    [ContractName.BLIND_BOX]: [
         'event BoxCreated(uint256 indexed boxId, bytes32 indexed userId, string boxInfoCID)',
         'event BoxStatusChanged(uint256 indexed boxId, uint8 status)',
         'event PriceChanged(uint256 indexed boxId, uint256 price)',

@@ -137,7 +137,7 @@ export const decodeMultiContractEvents = <TArgs = Record<string, unknown>>(
     } else {
         // Try decoding all configured contracts
         const contractsToTry: ContractName[] = [
-            ContractName.TRUTH_BOX,
+            ContractName.BLIND_BOX,
             ContractName.EXCHANGE,
             ContractName.FUND_MANAGER,
             ContractName.USER_MANAGER,

@@ -1,7 +1,7 @@
 
 export type QueryListType = 
   | 'metadataBox' 
-  | 'truthBox' 
+  | 'blindBox' 
   | 'exchange' 
   | 'fundManager' 
   | 'userManager' 
@@ -33,7 +33,7 @@ const controller = (list: QueryListType[]): CommonType => {
 // You can change the mode here to control the entire script behavior
 export const CONTROLLER = controller([
   'metadataBox',
-  'truthBox',
+  'blindBox',
   'exchange',
   'fundManager',
   'userManager',

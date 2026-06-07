@@ -173,7 +173,7 @@ export const getAllContractsSyncData = async (
     // Create a mapping, initialized to all contracts are null
     const result: Record<ContractName, SyncStatusData | null> = {
       [ContractName.FORWARDER]: null,
-      [ContractName.TRUTH_BOX]: null,
+      [ContractName.BLIND_BOX]: null,
       [ContractName.EXCHANGE]: null,
       [ContractName.FUND_MANAGER]: null,
       [ContractName.USER_MANAGER]: null,

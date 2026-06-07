@@ -1,10 +1,10 @@
 // import { ContractName } from '../contractsConfig/types'
 // import type { RuntimeScope } from '../oasisQuery/types/searchScope'
-// import { syncRuntimeContractEvents } from '../core/sync'
+// import { syncRuntimeContractEvents } from '../sync-engine/sync'
 // import { DEFAULT_SCOPE,} from '../config/sync'
-// import { saveEventDataToFile, shouldSaveEventDataToFile } from '../local/saveEventDataToFile'
+// import { saveEventDataToFile, shouldSaveEventDataToFile } from '../dev-tools/saveEventDataToFile'
 // import { decodeContractEvents } from '../utils/decodeEvents'
-// import { updateSyncStatus } from '../core/state'
+// import { updateSyncStatus } from '../sync-engine/state'
 // import { persistTruthNFTSync } from '../services/supabase/truthNFTWriter'
 // import { CONTROLLER } from '../controller'
 

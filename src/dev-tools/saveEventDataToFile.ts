@@ -8,7 +8,7 @@ import path from 'node:path'
 import type { RuntimeScope } from '../oasisQuery/types/searchScope'
 import { ContractName } from '../contractsConfig/types'
 import { OUTPUT_CONFIG } from '../config/sync'
-import type { RuntimeContractSyncResult } from '../core/sync/runtimeContractSyncer'
+import type { RuntimeContractSyncResult } from '../sync-engine/sync/runtimeContractSyncer'
 
 export interface EventDataPayload {
     fetchedAt: string

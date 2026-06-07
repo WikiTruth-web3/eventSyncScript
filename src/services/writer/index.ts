@@ -4,5 +4,5 @@ export * from './exchangeWriter'
 export * from './fundManagerWriter'
 export * from './userManagerWriter'
 export * from './ensureUsersId'
-export * from './truthBoxWriter'
+export * from './blindBoxWriter'
 
