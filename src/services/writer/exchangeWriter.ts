@@ -1,5 +1,5 @@
 // src/services/supabase/exchangeWriter.ts
-import type { RuntimeContractSyncResult } from '../../core/sync/runtimeContractSyncer'
+// import type { RuntimeContractSyncResult } from '../../core/sync/runtimeContractSyncer'
 import type { RuntimeScope } from '../../oasisQuery/types/searchScope'
 import { ContractName } from '../../contractsConfig/types'
 import { isSupabaseConfigured } from '../../config/supabase'
@@ -7,6 +7,7 @@ import { ensureUserIdExist } from './ensureUsersId'
 import { getSupabaseClient } from '../../config/supabase'
 import { getEventArgAsString, sanitizeForSupabase } from '../../utils/getEventArgs'
 import type { DecodedRuntimeEvent } from '../../oasisQuery/app/services/events'
+import type { ExchangeEventType } from '../../contractsConfig/eventSignatures/eventType'
 import { extractTimestamp } from '../../utils/extractTimestamp'
 import { getBoolean } from '../../utils/getBoolean'
 
@@ -294,22 +295,25 @@ export const persistExchangeSync = async (
     await ensureUserIdExist(scope, events)
 
 
-    const getPriority = (eventName: string): number => {
+    const getPriority = (eventName: ExchangeEventType): number => {
         if (eventName === 'BoxListed') return 1
         if (eventName === 'BoxPurchased' || eventName === 'BidPlaced') return 2
         return 3
     }
 
     const sortedEvents = events.sort((a, b) => {
-        const priorityA = getPriority(a.eventName)
-        const priorityB = getPriority(b.eventName)
+        const eventNameA = a.eventName as ExchangeEventType
+        const eventNameB = b.eventName as ExchangeEventType
+        const priorityA = getPriority(eventNameA)
+        const priorityB = getPriority(eventNameB)
         return priorityA - priorityB
     })
 
     console.log(`📝 Processing Exchange events with priority sorting...`)
 
     for (const event of sortedEvents) {
-        switch (event.eventName) {
+        const eventName = event.eventName as ExchangeEventType
+        switch (eventName) {
             case 'BoxListed':
                 await handleBoxListed(scope, event)
                 break
@@ -325,7 +329,7 @@ export const persistExchangeSync = async (
             case 'RequestDeadlineChanged':
                 await handleRequestDeadlineChanged(scope, event)
                 break
-            case 'ReviewDeadlineChanged':
+            case 'ArbitrationDeadineChanged':
                 await handleReviewDeadlineChanged(scope, event)
                 break
             case 'RefundPermitChanged':

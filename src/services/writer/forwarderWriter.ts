@@ -3,6 +3,7 @@ import { getSupabaseClient } from '../../config/supabase'
 import { isSupabaseConfigured } from '../../config/supabase'
 import { ContractName } from '../../contractsConfig/types'
 import type { DecodedRuntimeEvent } from '../../oasisQuery/app/services/events'
+import type { ForwarderEventType } from '../../contractsConfig/eventSignatures/eventType'
 
 /**
  * Handle Paused / Unpaused events for Forwarder
@@ -49,7 +50,8 @@ export const persistForwarderSync = async (
     if (contract !== ContractName.FORWARDER) return
 
     for (const event of events) {
-        if (event.eventName === 'Paused' || event.eventName === 'Unpaused') {
+        const eventName = event.eventName as ForwarderEventType
+        if (eventName === 'Paused' || eventName === 'Unpaused') {
             await handleForwarderState(scope, event)
         }
     }

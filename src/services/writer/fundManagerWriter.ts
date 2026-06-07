@@ -9,6 +9,7 @@ import { getEventArgAsString, sanitizeForSupabase } from '../../utils/getEventAr
 import { getEventArg } from '../../utils/eventArgs'
 import { normalizeHash } from '../../utils/eventArgs'
 import type { DecodedRuntimeEvent } from '../../oasisQuery/app/services/events'
+import type { FundManagerEventType } from '../../contractsConfig/eventSignatures/eventType'
 import { extractTimestamp } from '../../utils/extractTimestamp'
 import { generateRecordId } from '../../utils/generateId'
 
@@ -30,7 +31,7 @@ const hashToBytea = (hash: string): Uint8Array => {
  * Handle OrderAmountPaid event
  * Insert into payments table
  */
-export const handleOrderAmountPaid = async (
+export const handlePayment = async (
     scope: RuntimeScope,
     event: DecodedRuntimeEvent<Record<string, unknown>>,
 ): Promise<void> => {
@@ -88,17 +89,15 @@ export const handleOrderAmountWithdraw = async (
     const token = getEventArgAsString(event, 'token')
     const userId = getEventArgAsString(event, 'userId')
     const amount = getEventArgAsString(event, 'amount')
-    const fundsTypeRaw = getEventArg<unknown>(event, 'fundsType')
 
-    if (!listRaw || !token || !userId || !amount || fundsTypeRaw === undefined) return
+
+    if (!listRaw || !token || !userId || !amount ) return
 
     const boxList = Array.isArray(listRaw)
         ? listRaw.map(item => String(item))
         : [String(listRaw)]
 
     // fundsType is uint8，0 = Order, 1 = Refund
-    const fundsType = typeof fundsTypeRaw === 'bigint' ? Number(fundsTypeRaw) : Number(fundsTypeRaw)
-    const withdrawType = fundsType === 0 ? 'Order' : 'Refund'
 
     const supabase = getSupabaseClient()
     const timestamp = extractTimestamp(event)
@@ -117,7 +116,6 @@ export const handleOrderAmountWithdraw = async (
         user_id: userId,
         amount: amount,
         timestamp: timestamp,
-        withdraw_type: withdrawType,
         transaction_hash: hashToBytea(txHash),
         block_number: String(blockNumber),
     }) as Record<string, unknown>
@@ -129,17 +127,70 @@ export const handleOrderAmountWithdraw = async (
         })
 
     if (error) {
-        console.error(`❌ Failed to insert withdraw for user ${userId} (${withdrawType}):`, error.message)
+        console.error(`❌ Failed to insert withdraw for user ${userId} :`, error.message)
         console.error(`   Error info:`, JSON.stringify(error, null, 2))
     } else {
-        console.log(`✅ Inserted withdraw for user ${userId} (${withdrawType})`)
+        console.log(`✅ Inserted withdraw for user ${userId} `)
+    }
+}
+
+export const handleRefundAmountWithdraw = async (
+    scope: RuntimeScope,
+    event: DecodedRuntimeEvent<Record<string, unknown>>,
+): Promise<void> => {
+    const listRaw = getEventArg<unknown>(event, 'list')
+    const token = getEventArgAsString(event, 'token')
+    const userId = getEventArgAsString(event, 'userId')
+    const amount = getEventArgAsString(event, 'amount')
+
+
+    if (!listRaw || !token || !userId || !amount ) return
+
+    const boxList = Array.isArray(listRaw)
+        ? listRaw.map(item => String(item))
+        : [String(listRaw)]
+
+    // fundsType is uint8，0 = Order, 1 = Refund
+
+    const supabase = getSupabaseClient()
+    const timestamp = extractTimestamp(event)
+    const recordId = generateRecordId(event)
+    const txHash = normalizeHash(event.raw.tx_hash ?? event.raw.eth_tx_hash)
+    const blockNumber = event.raw.round ?? 0
+
+    if (!txHash) return
+
+    const withdrawData = sanitizeForSupabase({
+        network: scope.network,
+        layer: scope.layer,
+        id: recordId,
+        token: token.toLowerCase(),
+        box_list: boxList,
+        user_id: userId,
+        amount: amount,
+        timestamp: timestamp,
+        transaction_hash: hashToBytea(txHash),
+        block_number: String(blockNumber),
+    }) as Record<string, unknown>
+
+    const { error } = await supabase
+        .from('withdraws')
+        .upsert(withdrawData, {
+            onConflict: 'network,layer,id'
+        })
+
+    if (error) {
+        console.error(`❌ Failed to insert withdraw for user ${userId} :`, error.message)
+        console.error(`   Error info:`, JSON.stringify(error, null, 2))
+    } else {
+        console.log(`✅ Inserted withdraw for user ${userId} `)
     }
 }
 /**
  * Handle RewardsAdded event
  * Insert into rewards_addeds table
  */
-export const handleRewardsAdded = async (
+export const handleRewardAdded = async (
     scope: RuntimeScope,
     event: DecodedRuntimeEvent<Record<string, unknown>>,
 ): Promise<void> => {
@@ -327,37 +378,39 @@ export const persistFundManagerSync = async (
     // ✅ Then ensure users records exist
     await ensureUserIdExist(scope, events)
 
-    const getPriority = (eventName: string): number => {
-        if (eventName === 'OrderAmountPaid') return 1
-        if (eventName === 'RewardsAdded') return 2
+    const getPriority = (eventName: FundManagerEventType): number => {
+        if (eventName === 'Payment') return 1
+        if (eventName === 'RewardAdded') return 2
         return 3
     }
 
     const sortedEvents = events.sort((a, b) => {
-        const priorityA = getPriority(a.eventName)
-        const priorityB = getPriority(b.eventName)
+        const eventNameA = a.eventName as FundManagerEventType
+        const eventNameB = b.eventName as FundManagerEventType
+        const priorityA = getPriority(eventNameA)
+        const priorityB = getPriority(eventNameB)
         return priorityA - priorityB
     })
 
     console.log(`📝 Processing FundManager events with priority sorting...`)
 
     for (const event of sortedEvents) {
-        switch (event.eventName) {
-            case 'OrderAmountPaid':
-                await handleOrderAmountPaid(scope, event)
+        const eventName = event.eventName as FundManagerEventType
+        switch (eventName) {
+            case 'Payment':
+                await handlePayment(scope, event)
                 break
-            case 'RewardsAdded':
-                await handleRewardsAdded(scope, event)
+            case 'RewardAdded':
+                await handleRewardAdded(scope, event)
                 break
             case 'OrderAmountWithdraw':
                 await handleOrderAmountWithdraw(scope, event)
                 break
-            case 'RewardsWithdraw':
-                await handleRewardsWithdraw(scope, event)
+            case 'RefundAmountWithdraw':
+                await handleRefundAmountWithdraw(scope, event)
                 break
-            case 'Paused':
-            case 'Unpaused':
-                await handleFundManagerState(scope, event)
+            case 'RewardWithdraw':
+                await handleRewardsWithdraw(scope, event)
                 break
         }
     }

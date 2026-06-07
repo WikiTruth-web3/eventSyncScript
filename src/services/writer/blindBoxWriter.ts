@@ -1,11 +1,12 @@
 // src/services/supabase/boxesWriter.ts
 import type { RuntimeScope } from '../../oasisQuery/types/searchScope'
-import { ContractName } from '../../contractsConfig/types' // Need to import value, not just type
+import { ContractName } from '../../contractsConfig/types'
 import { getSupabaseClient } from '../../config/supabase'
 import { getEventArg } from '../../utils/eventArgs'
 import { ensureUserIdExist } from './ensureUsersId'
-import { sanitizeForSupabase, getEventArgAsString, hasEventArg } from '../../utils/getEventArgs'
+import { sanitizeForSupabase, getEventArgAsString } from '../../utils/getEventArgs'
 import type { DecodedRuntimeEvent } from '../../oasisQuery/app/services/events'
+import type { BlindBoxEventType } from '../../contractsConfig/eventSignatures/eventType'
 import { extractTimestamp } from '../../utils/extractTimestamp'
 import { upsertMetadataFromEvents } from './metadataWriter'
 import { CONTROLLER } from '../../controller'
@@ -191,28 +192,28 @@ export const persistTruthBoxSync = async (
     await ensureUserIdExist(scope, events)
     
     // Sort events by priority then by chronological order (implied by reverse() above)
-    const getPriority = (eventName: string): number => {
+    const getPriority = (eventName: BlindBoxEventType): number => {
         if (eventName === 'BoxCreated') return 1
         if (eventName === 'BoxStatusChanged') return 3
         return 2
     }
 
     const sortedEvents = events.sort((a, b) => {
-        const priorityA = getPriority(a.eventName)
-        const priorityB = getPriority(b.eventName)
+        const eventNameA = a.eventName as BlindBoxEventType
+        const eventNameB = b.eventName as BlindBoxEventType
+        const priorityA = getPriority(eventNameA)
+        const priorityB = getPriority(eventNameB)
         if (priorityA !== priorityB) {
             return priorityA - priorityB
         }
-        // If same priority, maintain chronological order (already sorted by reverse())
-        // In a stable sort, we don't need to do anything here if they are already in order.
-        // But since we want to be safe:
         return 0 
     })
 
     console.log(`📝 Processing TruthBox events with priority sorting...`)
 
     for (const event of sortedEvents) {
-        if (event.eventName === 'BoxCreated') {
+        const eventName = event.eventName as BlindBoxEventType
+        if (eventName === 'BoxCreated') {
             await handleBoxCreated(scope, event)
         } else {
             await handleBoxUpdate(scope, event)
