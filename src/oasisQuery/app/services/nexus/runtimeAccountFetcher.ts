@@ -86,7 +86,7 @@ export async function fetchRuntimeAccountEvents(
     const resolvedOffset = offset ?? paramOffset ?? 0
     const response = await axios.get(url, {
       params: {
-        rel: address,
+        rel: address.toLowerCase(),
         limit,
         offset: resolvedOffset,
         ...restParams,

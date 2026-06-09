@@ -15,6 +15,11 @@ export interface SyncStatusData {
   last_synced_at: string | null
 }
 
+const getFallbackStartBlock = (network: string, contract: ContractName): number => {
+  const addresses = network === 'testnet' ? TESTNET_ADDRESSES : MAINNET_ADDRESSES
+  return addresses[contract]?.startBlock ?? SYNC_STATE_CONFIG.DEFAULT_START_BLOCK
+}
+
 /**
  * Read sync status from Supabase sync_status table
  * Note: The sync_status table in Supabase is stored by network/layer/contract_name, each contract has its own sync status
@@ -33,23 +38,23 @@ export const getSyncCursor = async (key: ContractSyncKey): Promise<SyncCursor> =
       // If record does not exist, return default value
       if (error.code === 'PGRST116') {
         return {
-          lastBlock: SYNC_STATE_CONFIG.DEFAULT_START_BLOCK,
+          lastBlock: getFallbackStartBlock(key.network, key.contract),
         }
       }
       console.warn(`⚠️  Failed to read Supabase sync status:`, error.message)
       return {
-        lastBlock: SYNC_STATE_CONFIG.DEFAULT_START_BLOCK,
+        lastBlock: getFallbackStartBlock(key.network, key.contract),
       }
     }
 
     if (!data) {
       return {
-        lastBlock: SYNC_STATE_CONFIG.DEFAULT_START_BLOCK,
+        lastBlock: getFallbackStartBlock(key.network, key.contract),
       }
     }
 
     return {
-      lastBlock: Number(data.last_synced_block) || SYNC_STATE_CONFIG.DEFAULT_START_BLOCK,
+      lastBlock: Number(data.last_synced_block) || getFallbackStartBlock(key.network, key.contract),
       lastTimestamp: data.last_synced_at || undefined,
     }
   } catch (error) {
@@ -58,7 +63,7 @@ export const getSyncCursor = async (key: ContractSyncKey): Promise<SyncCursor> =
       error instanceof Error ? error.message : String(error),
     )
     return {
-      lastBlock: SYNC_STATE_CONFIG.DEFAULT_START_BLOCK,
+      lastBlock: getFallbackStartBlock(key.network, key.contract),
     }
   }
 }

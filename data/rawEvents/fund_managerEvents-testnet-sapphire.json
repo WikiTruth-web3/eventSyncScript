@@ -1,17 +1,17 @@
 {
-  "fetchedAt": "2026-06-09T02:40:57.206Z",
+  "fetchedAt": "2026-06-09T09:48:39.587Z",
   "scope": {
     "network": "testnet",
     "layer": "sapphire"
   },
   "contract": "FUND_MANAGER",
   "cursorBefore": {
-    "lastBlock": 0,
-    "lastTimestamp": "2026-06-07 14:47:40"
+    "lastBlock": 17389000,
+    "lastTimestamp": "2026-06-09 09:22:25"
   },
   "cursorAfter": {
-    "lastBlock": 0,
-    "lastTimestamp": "2026-06-07 14:47:40"
+    "lastBlock": 17389000,
+    "lastTimestamp": "2026-06-09 09:22:25"
   },
   "pagesFetched": 0,
   "totalFetched": 0,

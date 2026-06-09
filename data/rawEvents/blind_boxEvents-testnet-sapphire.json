@@ -1,13 +1,13 @@
 {
-  "fetchedAt": "2026-06-09T02:40:52.997Z",
+  "fetchedAt": "2026-06-09T09:19:37.305Z",
   "scope": {
     "network": "testnet",
     "layer": "sapphire"
   },
   "contract": "BLIND_BOX",
   "cursorBefore": {
-    "lastBlock": 5566,
-    "lastTimestamp": "2026-06-09 02:00:03"
+    "lastBlock": 0,
+    "lastTimestamp": "2026-06-09 09:14:20"
   },
   "cursorAfter": {
     "lastBlock": 17389621,
