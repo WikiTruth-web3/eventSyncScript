@@ -1,9 +1,8 @@
-// src/services/supabase/userIdWriter.ts
 import type { RuntimeScope } from '../../oasisQuery/types/searchScope'
 import { ContractName } from '../../contractsConfig/types'
-import { isSupabaseConfigured } from '../../config/supabase'
-import { getSupabaseClient } from '../../config/supabase'
-import { getEventArgAsString, sanitizeForSupabase } from '../../utils/getEventArgs'
+import { isDbConfigured, db } from '../../config/db.client'
+import { Database } from '../../types/dataBase'
+import { getEventArgAsString, sanitizeForDb } from '../../utils/getEventArgs'
 import type { DecodedRuntimeEvent } from '../../oasisQuery/app/services/events'
 import type { UserManagerEventType } from '../../contractsConfig/eventSignatures/eventType'
 
@@ -31,16 +30,14 @@ const _updateAddressBlacklist = async (
     address: string,
     isBlacklisted: boolean,
 ): Promise<void> => {
-    const supabase = getSupabaseClient()
-
-    const addressData = sanitizeForSupabase({
-        network: scope.network,
-        layer: scope.layer,
+    const addressData = sanitizeForDb({
+        network: scope.network as 'testnet' | 'mainnet',
+        layer: scope.layer as 'sapphire',
         id: address.toLowerCase(),
         is_blacklisted: isBlacklisted,
-    }) as Record<string, unknown>
+    }) as Database['public']['Tables']['user_addresses']['Insert']
 
-    const { error } = await supabase
+    const { error } = await db
         .from('user_addresses')
         .upsert(addressData, {
             onConflict: 'network,layer,id',
@@ -61,8 +58,8 @@ export const persistUserManagerSync = async (
     contract: ContractName,
     events: DecodedRuntimeEvent<any>[],
 ): Promise<void> => {
-    if (!isSupabaseConfigured()) {
-        console.warn('⚠️  SUPABASE_URL / SUPABASE_SERVICE_ROLE_KEY not configured, skipping database write')
+    if (!isDbConfigured()) {
+        console.warn('⚠️  Database URL / secret not configured, skipping database write')
         return
     }
 

@@ -1,10 +1,12 @@
 // src/services/supabase/boxesWriter.ts
 import type { RuntimeScope } from '../../oasisQuery/types/searchScope'
 import { ContractName } from '../../contractsConfig/types'
-import { getSupabaseClient } from '../../config/supabase'
+import { db } from '../../config/db.client'
+import { Database } from '../../types/dataBase'
 import { getEventArg } from '../../utils/eventArgs'
 import { ensureUserIdExist } from './ensureUsersId'
-import { sanitizeForSupabase, getEventArgAsString } from '../../utils/getEventArgs'
+import { sanitizeForDb } from '../../utils/getEventArgs'
+import { getEventArgAsString, DecodedContractEvent } from '../../utils/getContractsEventArgs'
 import type { DecodedRuntimeEvent } from '../../oasisQuery/app/services/events'
 import type { BlindBoxEventType } from '../../contractsConfig/eventSignatures/eventType'
 import { extractTimestamp } from '../../utils/extractTimestamp'
@@ -18,7 +20,7 @@ import { CONTROLLER } from '../../controller'
  */
 export const handleBoxCreated = async (
     scope: RuntimeScope,
-    event: DecodedRuntimeEvent<Record<string, unknown>>,
+    event: DecodedContractEvent<ContractName.BLIND_BOX, 'BoxCreated'>,
 ) => {
 
 
@@ -30,17 +32,15 @@ export const handleBoxCreated = async (
     // Only skip if boxId or userId is undefined (0 is a valid value)
     if (boxId === undefined || userId === undefined) return
 
-    const supabase = getSupabaseClient()
-
     // Extract timestamp from event
     const createTimestamp = extractTimestamp(event)
 
     // Create new box record
     // Note: token_id needs to be string-formatted number, cannot use BigInt (cannot serialize)
     // Note: According to supabase.config.ts, box_info_cid is a required field (can be null)
-    const boxData: Record<string, unknown> = {
-        network: scope.network,
-        layer: scope.layer,
+    const boxData: Database['public']['Tables']['boxes']['Insert'] = {
+        network: scope.network as 'testnet' | 'mainnet',
+        layer: scope.layer as 'sapphire',
         id: boxId,
         token_id: boxId, // PostgreSQL BIGINT can accept string-formatted numbers
         minter_id: userId,
@@ -61,10 +61,10 @@ export const handleBoxCreated = async (
     }
 
     // Sanitize entire object to ensure no BigInt
-    const sanitizedBoxData = sanitizeForSupabase(boxData) as Record<string, unknown>
+    const sanitizedBoxData = sanitizeForDb(boxData) as Database['public']['Tables']['boxes']['Insert']
     
     // Use upsert to avoid duplicate key errors (update if box exists, otherwise insert)
-    const { error } = await supabase
+    const { error } = await db
         .from('boxes')
         .upsert(sanitizedBoxData, {
             onConflict: 'network,layer,id', // Handle primary key conflict
@@ -90,13 +90,6 @@ export const handleBoxCreated = async (
     
 }
 
-// export const handleBoxStatusChanged = async (
-//     scope: RuntimeScope,
-//     event: DecodedRuntimeEvent<Record<string, unknown>>,
-// ) => {
-    
-// }
-
 /**
  * Handle other events, update boxes record
  */
@@ -109,8 +102,7 @@ export const handleBoxUpdate = async (
     const boxId = getEventArgAsString(event, 'boxId')
     if (!boxId) return
 
-    const supabase = getSupabaseClient()
-    const updates: Record<string, unknown> = {}
+    const updates: Database['public']['Tables']['boxes']['Update'] = {}
 
     switch (event.eventName) {
         case 'BoxStatusChanged':
@@ -144,26 +136,15 @@ export const handleBoxUpdate = async (
             }
             break
 
-        case 'PrivateKeyPublished':
-            const privateKey = getEventArgAsString(event, 'privateKey')
-            const userId = getEventArgAsString(event, 'userId')
-            if (privateKey !== undefined) {
-                updates.private_key = privateKey
-                updates.publisher_id = userId
-            } else {
-                console.warn(`⚠️  PrivateKeyPublished event for box ${boxId} has undefined privateKey`)
-            }
-            break
-
         // ... others
     }
 
     // Sanitize update object to ensure no BigInt
-    const sanitizedUpdates = sanitizeForSupabase(updates) as Record<string, unknown>
-    const { error } = await supabase
+    const sanitizedUpdates = sanitizeForDb(updates) as Database['public']['Tables']['boxes']['Update']
+    const { error } = await db
         .from('boxes')
         .update(sanitizedUpdates)
-        .match({ network: scope.network, layer: scope.layer, id: boxId })
+        .match({ network: scope.network as 'testnet' | 'mainnet', layer: scope.layer as 'sapphire', id: boxId })
 
     if (error) {
         console.warn(`⚠️  Failed to update box ${boxId} (${event.eventName}):`, error.message)
@@ -173,7 +154,7 @@ export const handleBoxUpdate = async (
 }
 
 /**
- * Process TruthBox contract events and write to Supabase
+ * Process BlindBox contract events and write to Supabase
  * Internal Priority (per rules.md):
  * 1. BoxCreated
  * 2. Others
@@ -181,7 +162,7 @@ export const handleBoxUpdate = async (
  * 
  * Events with same priority are processed in chronological order.
  */
-export const persistTruthBoxSync = async (
+export const persistBlindBoxSync = async (
     scope: RuntimeScope,
     contract: ContractName,
     events: DecodedRuntimeEvent<any>[],
@@ -209,12 +190,12 @@ export const persistTruthBoxSync = async (
         return 0 
     })
 
-    console.log(`📝 Processing TruthBox events with priority sorting...`)
+    console.log(`📝 Processing BlindBox events with priority sorting...`)
 
     for (const event of sortedEvents) {
         const eventName = event.eventName as BlindBoxEventType
         if (eventName === 'BoxCreated') {
-            await handleBoxCreated(scope, event)
+            await handleBoxCreated(scope, event as any)
         } else {
             await handleBoxUpdate(scope, event)
         }

@@ -3,7 +3,7 @@
  * Used in production environment (GitHub Actions), replacing local file system storage
  */
 
-import { getSupabaseClient } from '../../config/supabase'
+import { db } from '../../config/db.client'
 import type { ContractSyncKey, SyncCursor } from './types'
 import type { RuntimeScope } from '../../oasisQuery/types/searchScope'
 import { ContractName } from '../../contractsConfig/types'
@@ -21,9 +21,7 @@ export interface SyncStatusData {
  */
 export const getSyncCursor = async (key: ContractSyncKey): Promise<SyncCursor> => {
   try {
-    const supabase = getSupabaseClient()
-
-    const { data, error } = await supabase
+    const { data, error } = await db
       .from('sync_status')
       .select('last_synced_block, last_synced_at')
       .eq('network', key.network)
@@ -75,14 +73,12 @@ export const updateSyncStatus = async (
   lastBlock: number,
 ): Promise<void> => {
   try {
-    const supabase = getSupabaseClient()
-
-    const { error } = await supabase
+    const { error } = await db
       .from('sync_status')
       .upsert(
         {
-          network: scope.network,
-          layer: scope.layer,
+          network: scope.network as 'testnet' | 'mainnet',
+          layer: scope.layer as 'sapphire',
           contract_name: contract,
           last_synced_block: lastBlock.toString(),
           last_synced_at: new Date().toISOString(),
@@ -111,14 +107,12 @@ export const updateSyncStatus = async (
  * @param contract - Contract name
  * @returns Sync status data, if not exists, return null
  */
-export const getCurrentSupabaseData = async (
+export const getCurrentDbData = async (
   scope: RuntimeScope,
   contract: ContractName,
 ): Promise<SyncStatusData | null> => {
   try {
-    const supabase = getSupabaseClient()
-
-    const { data, error } = await supabase
+    const { data, error } = await db
       .from('sync_status')
       .select('last_synced_block, last_synced_at')
       .eq('network', scope.network)
@@ -157,9 +151,7 @@ export const getAllContractsSyncData = async (
   scope: RuntimeScope,
 ): Promise<Record<ContractName, SyncStatusData | null>> => {
   try {
-    const supabase = getSupabaseClient()
-
-    const { data, error } = await supabase
+    const { data, error } = await db
       .from('sync_status')
       .select('contract_name, last_synced_block, last_synced_at')
       .eq('network', scope.network)
@@ -206,7 +198,7 @@ export const getStartBlockHeight = async (
   scope: RuntimeScope,
   contract: ContractName,
 ): Promise<number> => {
-  const syncStatus = await getCurrentSupabaseData(scope, contract)
+  const syncStatus = await getCurrentDbData(scope, contract)
 
   if (syncStatus && syncStatus.last_synced_block > 0) {
     // Use last_synced_block + 1 from Supabase

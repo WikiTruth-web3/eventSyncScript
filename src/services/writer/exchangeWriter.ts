@@ -2,14 +2,14 @@
 // import type { RuntimeContractSyncResult } from '../../core/sync/runtimeContractSyncer'
 import type { RuntimeScope } from '../../oasisQuery/types/searchScope'
 import { ContractName } from '../../contractsConfig/types'
-import { isSupabaseConfigured } from '../../config/supabase'
+import { isDbConfigured, db } from '../../config/db.client'
 import { ensureUserIdExist } from './ensureUsersId'
-import { getSupabaseClient } from '../../config/supabase'
-import { getEventArgAsString, sanitizeForSupabase } from '../../utils/getEventArgs'
+import { getEventArgAsString, sanitizeForDb } from '../../utils/getEventArgs'
 import type { DecodedRuntimeEvent } from '../../oasisQuery/app/services/events'
 import type { ExchangeEventType } from '../../contractsConfig/eventSignatures/eventType'
 import { extractTimestamp } from '../../utils/extractTimestamp'
 import { getBoolean } from '../../utils/getBoolean'
+import { Database } from '../../types/dataBase'
 
 /**
  * Handle BoxListed event
@@ -25,22 +25,21 @@ export const handleBoxListed = async (
 
     if (!boxId || !userId) return
 
-    const supabase = getSupabaseClient()
     const timestamp = extractTimestamp(event)
 
-    const updates=sanitizeForSupabase({
+    const updates = sanitizeForDb({
         seller_id: userId,
         listed_timestamp: timestamp,
-    }) as Record<string, unknown>
+    }) as Database['public']['Tables']['boxes']['Update']
 
     if (acceptedToken) {
         updates.accepted_token = acceptedToken.toLowerCase()
     }
 
-    const { error } = await supabase
+    const { error } = await db
         .from('boxes')
         .update(updates)
-        .match({ network: scope.network, layer: scope.layer, id: boxId })
+        .match({ network: scope.network as 'testnet' | 'mainnet', layer: scope.layer as 'sapphire', id: boxId })
 
     if (error) {
         console.warn(`⚠️  Failed to update box ${boxId} for BoxListed:`, error.message)
@@ -59,17 +58,15 @@ const _updateBuyerPurchaseTimestamp = async (
     userId: string,
     timestamp: string,
 ): Promise<void> => {
-    const supabase = getSupabaseClient()
-
-    const updates = sanitizeForSupabase({
+    const updates = sanitizeForDb({
         buyer_id: userId,
         purchase_timestamp: timestamp,
-    }) as Record<string, unknown>
+    }) as Database['public']['Tables']['boxes']['Update']
 
-    const { error } = await supabase
+    const { error } = await db
         .from('boxes')
         .update(updates)
-        .match({ network: scope.network, layer: scope.layer, id: boxId })
+        .match({ network: scope.network as 'testnet' | 'mainnet', layer: scope.layer as 'sapphire', id: boxId })
 
     if (error) {
         console.warn(`⚠️  Failed to update box ${boxId} buyer_id: ${userId} and purchase_timestamp: ${timestamp}`, error.message)
@@ -115,22 +112,20 @@ export const handleBidPlaced = async (
     _updateBuyerPurchaseTimestamp(scope, boxId, userId, timestamp)
 
     const boxBidderId = `${boxId}-${userId}`
-
-    const supabase = getSupabaseClient()
     
     // Use upsert to handle duplicate bids (ignore on primary key conflict)
     // Note: id and bidder_id need to be string-formatted numbers (PostgreSQL NUMERIC type)
     // Note: Assumes box already exists (created by TruthBox contract events), if not exists will be handled by database foreign key constraint
-    const bidderData = sanitizeForSupabase({
-        network: scope.network,
-        layer: scope.layer,
+    const bidderData = sanitizeForDb({
+        network: scope.network as 'testnet' | 'mainnet',
+        layer: scope.layer as 'sapphire',
         id: boxBidderId,
         box_id: boxId,
         bidder_id: userId,
-    }) as Record<string, unknown>
+    }) as Database['public']['Tables']['box_bidders']['Insert']
 
     // First insert bidder record
-    const { error: bidderError } = await supabase
+    const { error: bidderError } = await db
         .from('box_bidders')
         .upsert(bidderData, {
             onConflict: 'network,layer,id',
@@ -157,18 +152,17 @@ export const handleCompleterAssigned = async (
 
     if (!boxId || !userId) return
 
-    const supabase = getSupabaseClient()
     const timestamp = extractTimestamp(event)
 
-    const updates = sanitizeForSupabase({
+    const updates = sanitizeForDb({
         completer_id: userId,
         complete_timestamp: timestamp,
-    }) as Record<string, unknown>
+    }) as Database['public']['Tables']['boxes']['Update']
 
-    const { error } = await supabase
+    const { error } = await db
         .from('boxes')
         .update(updates)
-        .match({ network: scope.network, layer: scope.layer, id: boxId })
+        .match({ network: scope.network as 'testnet' | 'mainnet', layer: scope.layer as 'sapphire', id: boxId })
 
     if (error) {
         console.warn(`⚠️  Failed to update box ${boxId} for CompleterAssigned:`, error.message)
@@ -190,16 +184,14 @@ export const handleRequestDeadlineChanged = async (
 
     if (!boxId || !deadline) return
 
-    const supabase = getSupabaseClient()
-
-    const updates = sanitizeForSupabase({
+    const updates = sanitizeForDb({
         request_refund_deadline: deadline,
-    }) as Record<string, unknown>
+    }) as Database['public']['Tables']['boxes']['Update']
 
-    const { error } = await supabase
+    const { error } = await db
         .from('boxes')
         .update(updates)
-        .match({ network: scope.network, layer: scope.layer, id: boxId })
+        .match({ network: scope.network as 'testnet' | 'mainnet', layer: scope.layer as 'sapphire', id: boxId })
 
     if (error) {
         console.warn(`⚠️  Failed to update box ${boxId} for RequestDeadlineChanged:`, error.message)
@@ -221,16 +213,14 @@ export const handleReviewDeadlineChanged = async (
 
     if (!boxId || !deadline) return
 
-    const supabase = getSupabaseClient()
-
-    const updates = sanitizeForSupabase({
+    const updates = sanitizeForDb({
         review_deadline: deadline,
-    }) as Record<string, unknown>
+    }) as Database['public']['Tables']['boxes']['Update']
 
-    const { error } = await supabase
+    const { error } = await db
         .from('boxes')
         .update(updates)
-        .match({ network: scope.network, layer: scope.layer, id: boxId })
+        .match({ network: scope.network as 'testnet' | 'mainnet', layer: scope.layer as 'sapphire', id: boxId })
 
     if (error) {
         console.warn(`⚠️  Failed to update box ${boxId} for ReviewDeadlineChanged:`, error.message)
@@ -250,20 +240,18 @@ export const handleRefundPermitChanged = async (
     const boxId = getEventArgAsString(event, 'boxId')
     if (!boxId) return
 
-    const supabase = getSupabaseClient()
-
     // permission is a boolean value, get directly from event args
     const permissionRaw = (event.args as Record<string, unknown>)?.permission
     const permission = getBoolean(permissionRaw, boxId)
 
-    const updates = sanitizeForSupabase({
+    const updates = sanitizeForDb({
         refund_permit: permission,
-    }) as Record<string, unknown>
+    }) as Database['public']['Tables']['boxes']['Update']
 
-    const { error } = await supabase
+    const { error } = await db
         .from('boxes')
         .update(updates)
-        .match({ network: scope.network, layer: scope.layer, id: boxId })
+        .match({ network: scope.network as 'testnet' | 'mainnet', layer: scope.layer as 'sapphire', id: boxId })
 
     if (error) {
         console.warn(`⚠️  Failed to update box ${boxId} for RefundPermitChanged:`, error.message)
@@ -284,8 +272,8 @@ export const persistExchangeSync = async (
     contract: ContractName,
     events: DecodedRuntimeEvent<any>[],
 ): Promise<void> => {
-    if (!isSupabaseConfigured()) {
-        console.warn('⚠️  SUPABASE_URL / SUPABASE_SERVICE_ROLE_KEY not configured, skipping database write')
+    if (!isDbConfigured()) {
+        console.warn('⚠️  Database URL / secret not configured, skipping database write')
         return
     }
 

@@ -2,16 +2,16 @@
 // import type { RuntimeContractSyncResult } from '../../core/sync/runtimeContractSyncer'
 import type { RuntimeScope } from '../../oasisQuery/types/searchScope'
 import { ContractName } from '../../contractsConfig/types'
-import { isSupabaseConfigured } from '../../config/supabase'
+import { isDbConfigured, db } from '../../config/db.client'
 import { ensureUserIdExist } from './ensureUsersId'
-import { getSupabaseClient } from '../../config/supabase'
-import { getEventArgAsString, sanitizeForSupabase } from '../../utils/getEventArgs'
+import { getEventArgAsString, sanitizeForDb } from '../../utils/getEventArgs'
 import { getEventArg } from '../../utils/eventArgs'
 import { normalizeHash } from '../../utils/eventArgs'
 import type { DecodedRuntimeEvent } from '../../oasisQuery/app/services/events'
 import type { FundManagerEventType } from '../../contractsConfig/eventSignatures/eventType'
 import { extractTimestamp } from '../../utils/extractTimestamp'
 import { generateRecordId } from '../../utils/generateId'
+import { Database } from '../../types/dataBase'
 
 /**
  * Convert transaction hash to BYTEA
@@ -42,7 +42,6 @@ export const handlePayment = async (
 
     if (!boxId || !userId || !token || !amount) return
 
-    const supabase = getSupabaseClient()
     const timestamp = extractTimestamp(event)
     const recordId = generateRecordId(event)
     const txHash = normalizeHash(event.raw.tx_hash ?? event.raw.eth_tx_hash)
@@ -50,9 +49,9 @@ export const handlePayment = async (
 
     if (!txHash) return
 
-    const paymentData = sanitizeForSupabase({
-        network: scope.network,
-        layer: scope.layer,
+    const paymentData = sanitizeForDb({ 
+        network: scope.network as 'testnet' | 'mainnet',
+        layer: scope.layer as 'sapphire',
         id: recordId,
         box_id: boxId,
         user_id: userId,
@@ -61,9 +60,9 @@ export const handlePayment = async (
         timestamp: timestamp,
         transaction_hash: hashToBytea(txHash),
         block_number: String(blockNumber),
-    }) as Record<string, unknown>
+    }) as Database['public']['Tables']['payments']['Insert']
 
-    const { error } = await supabase
+    const { error } = await db
         .from('payments')
         .upsert(paymentData, {
             onConflict: 'network,layer,id'
@@ -99,7 +98,6 @@ export const handleOrderAmountWithdraw = async (
 
     // fundsType is uint8，0 = Order, 1 = Refund
 
-    const supabase = getSupabaseClient()
     const timestamp = extractTimestamp(event)
     const recordId = generateRecordId(event)
     const txHash = normalizeHash(event.raw.tx_hash ?? event.raw.eth_tx_hash)
@@ -107,9 +105,9 @@ export const handleOrderAmountWithdraw = async (
 
     if (!txHash) return
 
-    const withdrawData = sanitizeForSupabase({
-        network: scope.network,
-        layer: scope.layer,
+    const withdrawData = sanitizeForDb({
+        network: scope.network as 'testnet' | 'mainnet',
+        layer: scope.layer as 'sapphire',
         id: recordId,
         token: token.toLowerCase(),
         box_list: boxList,
@@ -118,9 +116,9 @@ export const handleOrderAmountWithdraw = async (
         timestamp: timestamp,
         transaction_hash: hashToBytea(txHash),
         block_number: String(blockNumber),
-    }) as Record<string, unknown>
+    }) as Database['public']['Tables']['withdraws']['Insert']
 
-    const { error } = await supabase
+    const { error } = await db
         .from('withdraws')
         .upsert(withdrawData, {
             onConflict: 'network,layer,id'
@@ -152,7 +150,6 @@ export const handleRefundAmountWithdraw = async (
 
     // fundsType is uint8，0 = Order, 1 = Refund
 
-    const supabase = getSupabaseClient()
     const timestamp = extractTimestamp(event)
     const recordId = generateRecordId(event)
     const txHash = normalizeHash(event.raw.tx_hash ?? event.raw.eth_tx_hash)
@@ -160,9 +157,9 @@ export const handleRefundAmountWithdraw = async (
 
     if (!txHash) return
 
-    const withdrawData = sanitizeForSupabase({
-        network: scope.network,
-        layer: scope.layer,
+    const withdrawData = sanitizeForDb({
+        network: scope.network as 'testnet' | 'mainnet',
+        layer: scope.layer as 'sapphire',
         id: recordId,
         token: token.toLowerCase(),
         box_list: boxList,
@@ -171,9 +168,9 @@ export const handleRefundAmountWithdraw = async (
         timestamp: timestamp,
         transaction_hash: hashToBytea(txHash),
         block_number: String(blockNumber),
-    }) as Record<string, unknown>
+    }) as Database['public']['Tables']['withdraws']['Insert']
 
-    const { error } = await supabase
+    const { error } = await db
         .from('withdraws')
         .upsert(withdrawData, {
             onConflict: 'network,layer,id'
@@ -216,7 +213,6 @@ export const handleRewardAdded = async (
         rewardType = rewardTypeMap[rewardTypeNum] || 'Total'
     }
 
-    const supabase = getSupabaseClient()
     const timestamp = extractTimestamp(event)
     const recordId = generateRecordId(event)
     const txHash = normalizeHash(event.raw.tx_hash ?? event.raw.eth_tx_hash)
@@ -224,9 +220,9 @@ export const handleRewardAdded = async (
 
     if (!txHash) return
 
-    const rewardData = sanitizeForSupabase({
-        network: scope.network,
-        layer: scope.layer,
+    const rewardData = sanitizeForDb({
+        network: scope.network as 'testnet' | 'mainnet',
+        layer: scope.layer as 'sapphire',
         id: recordId,
         box_id: boxId,
         token: token.toLowerCase(),
@@ -235,9 +231,9 @@ export const handleRewardAdded = async (
         timestamp: timestamp,
         transaction_hash: hashToBytea(txHash),
         block_number: String(blockNumber),
-    }) as Record<string, unknown>
+    }) as Database['public']['Tables']['rewards_addeds']['Insert']
 
-    const { error } = await supabase
+    const { error } = await db
         .from('rewards_addeds')
         .upsert(rewardData, {
             onConflict: 'network,layer,id'
@@ -266,7 +262,6 @@ export const handleRewardsWithdraw = async (
 
     if (!userId || !token || !amount) return
 
-    const supabase = getSupabaseClient()
     const timestamp = extractTimestamp(event)
     const recordId = generateRecordId(event)
     const txHash = normalizeHash(event.raw.tx_hash ?? event.raw.eth_tx_hash)
@@ -274,9 +269,9 @@ export const handleRewardsWithdraw = async (
 
     if (!txHash) return
 
-    const withdrawData = sanitizeForSupabase({
-        network: scope.network,
-        layer: scope.layer,
+    const withdrawData = sanitizeForDb({
+        network: scope.network as 'testnet' | 'mainnet',
+        layer: scope.layer as 'sapphire',
         id: recordId,
         token: token.toLowerCase(),
         box_list: [], 
@@ -286,9 +281,9 @@ export const handleRewardsWithdraw = async (
         withdraw_type: 'Reward',
         transaction_hash: hashToBytea(txHash),
         block_number: String(blockNumber),
-    }) as Record<string, unknown>
+    }) as Database['public']['Tables']['withdraws']['Insert']
 
-    const { error } = await supabase
+    const { error } = await db
         .from('withdraws')
         .upsert(withdrawData, {
             onConflict: 'network,layer,id'
@@ -309,14 +304,13 @@ export const handleFundManagerState = async (
     scope: RuntimeScope,
     event: DecodedRuntimeEvent<Record<string, unknown>>,
 ): Promise<void> => {
-    const supabase = getSupabaseClient()
     const isPaused = event.eventName === 'Paused'
 
-    const { error } = await supabase
+    const { error } = await db
         .from('fund_manager_state')
         .upsert({
-            network: scope.network,
-            layer: scope.layer,
+            network: scope.network as 'testnet' | 'mainnet',
+            layer: scope.layer as 'sapphire',
             id: 'fundManager',
             paused: isPaused,
         }, {
@@ -335,14 +329,12 @@ export const handleFundManagerState = async (
  * This is required by token_total_amounts table foreign key constraint
  */
 export const ensureFundManagerStateExists = async (scope: RuntimeScope): Promise<void> => {
-    const supabase = getSupabaseClient()
-    
-    const { error } = await supabase
+    const { error } = await db
         .from('fund_manager_state')
         .upsert(
             {
-                network: scope.network,
-                layer: scope.layer,
+                network: scope.network as 'testnet' | 'mainnet',
+                layer: scope.layer as 'sapphire',
                 id: 'fundManager',
             },
             {
@@ -365,8 +357,8 @@ export const persistFundManagerSync = async (
     contract: ContractName,
     events: DecodedRuntimeEvent<any>[],
 ): Promise<void> => {
-    if (!isSupabaseConfigured()) {
-        console.warn('⚠️  SUPABASE_URL / SUPABASE_SERVICE_ROLE_KEY not configured, skipping database write')
+    if (!isDbConfigured()) {
+        console.warn('⚠️  Database URL / secret not configured, skipping database write')
         return
     }
 

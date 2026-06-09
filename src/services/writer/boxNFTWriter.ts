@@ -2,9 +2,8 @@
 // import type { RuntimeContractSyncResult } from '../../core/sync/runtimeContractSyncer'
 // import type { RuntimeScope } from '../../oasisQuery/types/searchScope'
 // import { ContractName } from '../../contractsConfig/types'
-// import { isSupabaseConfigured } from '../../config/supabase'
-// import { getSupabaseClient } from '../../config/supabase'
-// import { getEventArgAsString, sanitizeForSupabase } from '../../utils/getEventArgs'
+// // import { isDbConfigured, db } from '../../config/db.client'
+// // import { getEventArgAsString, sanitizeForDb } from '../../utils/getEventArgs'
 // import type { DecodedRuntimeEvent } from '../../oasisQuery/app/services/events'
 // import { ensureUserAddressExists } from './ensureAddress'
 

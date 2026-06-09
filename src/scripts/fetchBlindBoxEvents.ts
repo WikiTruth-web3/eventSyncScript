@@ -5,11 +5,11 @@ import { DEFAULT_SCOPE,} from '../config/sync'
 import { saveEventDataToFile, shouldSaveEventDataToFile } from '../dev-tools/saveEventDataToFile'
 import { updateSyncStatus } from '../sync-engine/state'
 import { decodeContractEvents } from '../utils/decodeEvents'
-import { persistTruthBoxSync } from '../services/writer/blindBoxWriter'
+import { persistBlindBoxSync } from '../services/writer/blindBoxWriter'
 import { CONTROLLER } from '../controller'
 import type { DecodedRuntimeEvent } from '../oasisQuery/app/services/events'
 
-export interface FetchTruthBoxEventsResult {
+export interface FetchBlindBoxEventsResult {
   outputPath: string | null 
   block_number: number
   events: DecodedRuntimeEvent<Record<string, unknown>>[]
@@ -24,7 +24,7 @@ export interface FetchTruthBoxEventsResult {
 export async function fetchBlindBoxEvents(
   scope: RuntimeScope = DEFAULT_SCOPE,
   lastSyncedBlock: number,
-): Promise<FetchTruthBoxEventsResult> {
+): Promise<FetchBlindBoxEventsResult> {
   console.log(`🌐 Querying BlindBox: network=${scope.network}, layer=${scope.layer}`)
 
   const syncResult = await syncRuntimeContractEvents({
@@ -49,7 +49,7 @@ export async function fetchBlindBoxEvents(
 
   // Phase 2: Process each contract independently in a specific order to handle dependencies
   if (CONTROLLER.writeToSupabase && decodedEvents.length > 0) {
-    await persistTruthBoxSync(DEFAULT_SCOPE, ContractName.BLIND_BOX, decodedEvents)
+    await persistBlindBoxSync(DEFAULT_SCOPE, ContractName.BLIND_BOX, decodedEvents)
   }
 
   // Optional: Save raw event data to file (for debugging)

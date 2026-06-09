@@ -1,49 +1,7 @@
 
-import { createClient, SupabaseClient } from '@supabase/supabase-js';
-
-const supabaseConfig = {
-    url: process.env.SUPABASE_URL || '',
-    anonKey: process.env.SUPABASE_ANON_KEY || '',
-    serviceRoleKey: process.env.SUPABASE_SERVICE_ROLE_KEY || '',
-};
-
-// Validate configuration
-if (!supabaseConfig.url || !supabaseConfig.anonKey) {
-    throw new Error('Missing Supabase configuration, please check environment variables SUPABASE_URL and SUPABASE_ANON_KEY');
-}
-
-
-export function createSupabaseClient(): SupabaseClient<Database> {
-    return createClient<Database>(supabaseConfig.url, supabaseConfig.anonKey, {
-        auth: {
-            persistSession: true,
-            autoRefreshToken: true,
-        },
-    });
-}
 
 /**
- * Create Supabase service client (for server-side use)
- * Use Service Role Key, bypass RLS policy
- * Warning: Only use on server-side, do not expose to client
- */
-export function createSupabaseServiceClient(): SupabaseClient<Database> {
-    if (!supabaseConfig.serviceRoleKey) {
-        throw new Error('Missing SUPABASE_SERVICE_ROLE_KEY, cannot create service client');
-    }
-
-    return createClient<Database>(supabaseConfig.url, supabaseConfig.serviceRoleKey, {
-        auth: {
-            persistSession: false,
-            autoRefreshToken: false,
-        },
-    });
-}
-
-export const supabase = createSupabaseClient();
-
-/**
- * Supabase database type definition
+ * database type definition
  * 
  * Includes type definitions for all tables (Row, Insert, Update),
  * and all functions (Args, Returns)

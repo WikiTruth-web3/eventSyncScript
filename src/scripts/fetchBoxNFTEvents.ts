@@ -5,27 +5,27 @@
 // import { saveEventDataToFile, shouldSaveEventDataToFile } from '../dev-tools/saveEventDataToFile'
 // import { decodeContractEvents } from '../utils/decodeEvents'
 // import { updateSyncStatus } from '../sync-engine/state'
-// import { persistTruthNFTSync } from '../services/supabase/truthNFTWriter'
+// import { persistBoxNFTSync } from '../services/supabase/truthNFTWriter'
 // import { CONTROLLER } from '../controller'
 
 // import type { DecodedRuntimeEvent } from '../oasisQuery/app/services/events'
 
-// export interface FetchTruthNFTEventsResult {
+// export interface FetchBoxNFTEventsResult {
 //   outputPath: string | null
 //   block_number: number
 //   events: DecodedRuntimeEvent<Record<string, unknown>>[]
 // }
 
 // /**
-//  * Fetch TruthNFT contract events
+//  * Fetch BoxNFT contract events
 //  * @param scope - Runtime scope
 //  * @param lastSyncedBlock - Last synced block height (optional), if not provided, uses contract config's startBlock
 //  */
-// export async function fetchTruthNFTEvents(
+// export async function fetchBoxNFTEvents(
 //   scope: RuntimeScope = DEFAULT_SCOPE,
 //   lastSyncedBlock: number,
-// ): Promise<FetchTruthNFTEventsResult> {
-//   console.log(`🌐 Querying TruthNFT events: network=${scope.network}, layer=${scope.layer}`)
+// ): Promise<FetchBoxNFTEventsResult> {
+//   console.log(`🌐 Querying BoxNFT events: network=${scope.network}, layer=${scope.layer}`)
 
 //   const syncResult = await syncRuntimeContractEvents({
 //     scope,
@@ -50,7 +50,7 @@
 //   // Phase 2: Process each contract independently in a specific order to handle dependencies
 //     if (CONTROLLER.writeToSupabase && decodedEvents.length > 0) {
       
-//       await persistTruthNFTSync(DEFAULT_SCOPE, ContractName.TRUTH_NFT, decodedEvents)
+//       await persistBoxNFTSync(DEFAULT_SCOPE, ContractName.TRUTH_NFT, decodedEvents)
 //     }
 
 //   let outputPath: string | null = null

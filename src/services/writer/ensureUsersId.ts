@@ -1,7 +1,8 @@
 import type { RuntimeScope } from '../../oasisQuery/types/searchScope'
 import type { DecodedRuntimeEvent } from '../../oasisQuery/app/services/events'
-import { getSupabaseClient } from '../../config/supabase'
-import { sanitizeForSupabase, getEventArgAsString } from '../../utils/getEventArgs'
+import { db } from '../../config/db.client'
+import { sanitizeForDb, getEventArgAsString } from '../../utils/getEventArgs'
+import { Database } from '../../types/dataBase'
 
 /**
  * Process all events to ensure users records exist
@@ -24,21 +25,19 @@ export const ensureUserIdExist = async (
 
     if (userIds.size === 0) return
 
-    const supabase = getSupabaseClient()
-    
     // Batch upsert to avoid multiple queries
     const userRecords = Array.from(userIds).map(userId => ({
-        network: scope.network,
-        layer: scope.layer,
+        network: scope.network as 'testnet' | 'mainnet',
+        layer: scope.layer as 'sapphire',
         id: userId,
     }))
     
     // Sanitize objects to ensure no BigInt
     const sanitizedUserRecords = userRecords.map(record => 
-        sanitizeForSupabase(record) as Record<string, unknown>
+        sanitizeForDb(record) as Database['public']['Tables']['users']['Insert']
     )
     
-    const { error } = await supabase
+    const { error } = await db
         .from('users')
         .upsert(sanitizedUserRecords, {
             onConflict: 'network,layer,id',

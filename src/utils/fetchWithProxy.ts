@@ -3,13 +3,13 @@
  */
 
 import { getProxyUrl, isProxyConfigured, shouldUseProxy } from '../config/proxy'
-import { setGlobalDispatcher, ProxyAgent } from 'undici'
+import { ProxyAgent } from 'undici'
 
-// Initialize global proxy (if enabled)
-let proxyInitialized = false
+// Initialize local proxy agent (if enabled)
+let proxyAgent: ProxyAgent | null = null
 
 export const initializeProxy = () => {
-  if (proxyInitialized) {
+  if (proxyAgent) {
     return
   }
 
@@ -24,9 +24,8 @@ export const initializeProxy = () => {
   if (isProxyConfigured()) {
     const proxyUrl = getProxyUrl()
     if (proxyUrl) {
-      console.log(`🌐 Enable proxy: ${proxyUrl}`)
-      setGlobalDispatcher(new ProxyAgent(proxyUrl))
-      proxyInitialized = true
+      console.log(`🌐 Enable proxy agent: ${proxyUrl}`)
+      proxyAgent = new ProxyAgent(proxyUrl)
     }
   } else {
     // Proxy mode is enabled, but proxy URL is not configured
@@ -59,8 +58,9 @@ export const fetchWithProxy = async (
         accept: 'application/json',
         ...options.headers,
       },
+      dispatcher: proxyAgent || undefined,
       signal: controller.signal,
-    })
+    } as any)
     clearTimeout(timeoutId)
     return response
   } catch (error) {
@@ -68,3 +68,4 @@ export const fetchWithProxy = async (
     throw error
   }
 }
+

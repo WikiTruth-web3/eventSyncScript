@@ -21,7 +21,7 @@ async function main() {
     let userManagerLastBlock = default_start_block
     let forwarderLastBlock = default_start_block
 
-    // Get all contracts sync data from Supabase
+    // Get all contracts sync data from database
     if (!CONTROLLER.restart) {
       const allSyncData = await getAllContractsSyncData(DEFAULT_SCOPE)
       truthBoxLastBlock = allSyncData[ContractName.BLIND_BOX]?.last_synced_block || default_start_block

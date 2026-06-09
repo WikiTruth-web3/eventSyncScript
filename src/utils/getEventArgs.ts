@@ -1,5 +1,5 @@
 /**
- * Supabase write utility functions
+ * Database write utility functions
  * Used to handle BigInt serialization issues
  */
 
@@ -112,13 +112,13 @@ export const toStringOrNull = (value: unknown): string | null => {
  * @param obj - Object to clean
  * @returns Cleaned object
  */
-export const sanitizeForSupabase = (obj: unknown): unknown => {
+export const sanitizeForDb = (obj: unknown): unknown => {
   if (obj === null || obj === undefined) {
     return obj
   }
   
   if (typeof obj === 'bigint') {
-    // Convert BigInt to string (Supabase NUMERIC type can accept string)
+    // Convert BigInt to string (Database NUMERIC type can accept string)
     return obj.toString()
   }
   
@@ -131,13 +131,13 @@ export const sanitizeForSupabase = (obj: unknown): unknown => {
   }
   
   if (Array.isArray(obj)) {
-    return obj.map(sanitizeForSupabase)
+    return obj.map(sanitizeForDb)
   }
   
   if (typeof obj === 'object') {
     const result: Record<string, unknown> = {}
     for (const [key, value] of Object.entries(obj)) {
-      result[key] = sanitizeForSupabase(value)
+      result[key] = sanitizeForDb(value)
     }
     return result
   }

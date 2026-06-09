@@ -1,14 +1,15 @@
 import type { RuntimeScope } from '../../oasisQuery/types/searchScope'
-import { getSupabaseClient } from '../../config/supabase'
+import { db } from '../../config/db.client'
+import { Database } from '../../types/dataBase'
 import { fetchMetadataBox } from '../ipfs/fetchMetadataBox'
 import type { MetadataBoxPayload } from '../ipfs/fetchMetadataBox'
-import { sanitizeForSupabase } from '../../utils/getEventArgs'
+import { sanitizeForDb } from '../../utils/getEventArgs'
 
 // Removed V2_BLOCK_THRESHOLD and v1 conversion logic as per user request to only keep v2.
 
 type MetadataRecord = {
-  network: RuntimeScope['network']
-  layer: RuntimeScope['layer']
+  network: 'testnet' | 'mainnet'
+  layer: 'sapphire'
   id: string
   type_of_crime?: string
   label?: string[]
@@ -58,20 +59,20 @@ const normalizeMetadataRecord = (
 
   // Sanitize nested objects that may contain BigInt
   const encryptionSlicesMetadataCID = metadata.encryption_slices_metadata_cid
-    ? (sanitizeForSupabase(metadata.encryption_slices_metadata_cid) as Record<string, unknown>)
+    ? (sanitizeForDb(metadata.encryption_slices_metadata_cid) as Record<string, unknown>)
     : null
 
   const encryptionFileCID = metadata.encryption_file_cid
-    ? (sanitizeForSupabase(metadata.encryption_file_cid) as Record<string, unknown>[])
+    ? (sanitizeForDb(metadata.encryption_file_cid) as Record<string, unknown>[])
     : null
 
   const encryptionPasswords = metadata.encryption_passwords
-    ? (sanitizeForSupabase(metadata.encryption_passwords) as Record<string, unknown>)
+    ? (sanitizeForDb(metadata.encryption_passwords) as Record<string, unknown>)
     : null
 
   return {
-    network: scope.network,
-    layer: scope.layer,
+    network: scope.network as 'testnet' | 'mainnet',
+    layer: scope.layer as 'sapphire',
     id: boxId,
     type_of_crime: metadata.type_of_crime,
     label: metadata.label,
@@ -105,11 +106,10 @@ export const upsertMetadataFromEvents = async (
     const record = normalizeMetadataRecord(scope, boxId, metadata)
     console.log(`✅ Successfully normalized metadata for box ${boxId}`)
 
-    const supabase = getSupabaseClient()
     // Sanitize all records to ensure no BigInt
-    const sanitizedRecord = sanitizeForSupabase(record) as MetadataRecord
+    const sanitizedRecord = sanitizeForDb(record) as Database['public']['Tables']['metadata_boxes']['Insert']
     
-    const { error } = await supabase.from('metadata_boxes').upsert(sanitizedRecord, {
+    const { error } = await db.from('metadata_boxes').upsert(sanitizedRecord, {
       onConflict: 'network,layer,id',
     })
     

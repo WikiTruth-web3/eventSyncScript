@@ -1,6 +1,6 @@
 import type { RuntimeScope } from '../../oasisQuery/types/searchScope'
-import { getSupabaseClient } from '../../config/supabase'
-import { isSupabaseConfigured } from '../../config/supabase'
+import { isDbConfigured, db } from '../../config/db.client'
+import { Database } from '../../types/dataBase'
 import { ContractName } from '../../contractsConfig/types'
 import type { DecodedRuntimeEvent } from '../../oasisQuery/app/services/events'
 import type { ForwarderEventType } from '../../contractsConfig/eventSignatures/eventType'
@@ -13,17 +13,16 @@ export const handleForwarderState = async (
     scope: RuntimeScope,
     event: DecodedRuntimeEvent<Record<string, unknown>>,
 ): Promise<void> => {
-    const supabase = getSupabaseClient()
     const isPaused = event.eventName === 'Paused'
 
-    const { error } = await supabase
+    const { error } = await db
         .from('forwarder_state')
         .upsert({
-            network: scope.network,
-            layer: scope.layer,
+            network: scope.network as 'testnet' | 'mainnet',
+            layer: scope.layer as 'sapphire',
             id: 'forwarder',
             paused: isPaused,
-        }, {
+        } as Database['public']['Tables']['forwarder_state']['Insert'], {
             onConflict: 'network,layer,id',
         })
 
@@ -35,15 +34,15 @@ export const handleForwarderState = async (
 }
 
 /**
- * Process Forwarder contract events and write to Supabase
+ * Process Forwarder contract events and write to Database
  */
 export const persistForwarderSync = async (
     scope: RuntimeScope,
     contract: ContractName,
     events: DecodedRuntimeEvent<any>[],
 ): Promise<void> => {
-    if (!isSupabaseConfigured()) {
-        console.warn('⚠️  SUPABASE_URL / SUPABASE_SERVICE_ROLE_KEY not configured, skipping database write')
+    if (!isDbConfigured()) {
+        console.warn('⚠️  Database URL / secret not configured, skipping database write')
         return
     }
 

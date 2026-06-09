@@ -19,8 +19,8 @@ export interface CommonType {
 
 const COMMON_CONSTANT = {
     writeToSupabase: true,
-    restart: false,
-    isUpdateLastBlock: true,
+    restart: true,
+    isUpdateLastBlock: false,
 }
 
 const controller = (list: QueryListType[]): CommonType => {
