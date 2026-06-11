@@ -1,11 +1,11 @@
 name: Event Sync
 
 on:
-  # Manually trigger
+  repository_dispatch:
+    types: [sync-event]
   workflow_dispatch:
   schedule:
     - cron: '*/5 * * * *' # UTC time, every 5 minutes
-  # Also trigger when pushing to main branch (optional)
   push:
     branches:
       - main
@@ -39,15 +39,34 @@ jobs:
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
           
           # Event sync configuration
-          EVENT_SYNC_USE_PROXY: 'false' # GitHub Actions does not need proxy
-          EVENT_SYNC_SAVE_JSON: 'false' # Do not save JSON files
+          EVENT_SYNC_USE_PROXY: 'false'
+          EVENT_SYNC_SAVE_JSON: 'false'
           
-          # Optional: Custom sync configuration (can be configured via GitHub Secrets)
+          # Dynamically set network based on triggered chainId (default to testnet)
+          EVENT_SYNC_NETWORK: ${{ (github.event.client_payload.chainId == '23294') && 'mainnet' || 'testnet' }}
+          
+          # Optional: Custom sync configuration
           EVENT_SYNC_FROM_BLOCK: ${{ secrets.EVENT_SYNC_FROM_BLOCK }}
           EVENT_SYNC_LIMIT: ${{ secrets.EVENT_SYNC_LIMIT }}
           EVENT_SYNC_BATCH_SIZE: ${{ secrets.EVENT_SYNC_BATCH_SIZE }}
         run: npm start
         continue-on-error: false
+
+      - name: Notify Worker of Success
+        if: ${{ success() && github.event.client_payload.chainId != '' }}
+        run: |
+          curl -X POST "${{ secrets.SYNC_WORKER_URL }}/sync-callback" \
+            -H "Content-Type: application/json" \
+            -H "Authorization: Bearer ${{ secrets.SYNC_CLIENT_SECRET }}" \
+            -d '{"chainId": "${{ github.event.client_payload.chainId }}", "status": "success"}'
+
+      - name: Notify Worker of Failure
+        if: ${{ failure() && github.event.client_payload.chainId != '' }}
+        run: |
+          curl -X POST "${{ secrets.SYNC_WORKER_URL }}/sync-callback" \
+            -H "Content-Type: application/json" \
+            -H "Authorization: Bearer ${{ secrets.SYNC_CLIENT_SECRET }}" \
+            -d '{"chainId": "${{ github.event.client_payload.chainId }}", "status": "failed"}'
 
       - name: Upload logs on failure
         if: failure()
@@ -56,4 +75,3 @@ jobs:
           name: sync-logs
           path: '*.log'
           if-no-files-found: ignore
-
