@@ -37,11 +37,7 @@ export const ensureUserIdExist = async (
         sanitizeForDb(record) as Database['public']['Tables']['users']['Insert']
     )
     
-    const { error } = await db
-        .from('users')
-        .upsert(sanitizedUserRecords, {
-            onConflict: 'network,layer,id',
-        })
+    const { error } = await db.upsert('users', sanitizedUserRecords)
 
     if (error) {
         console.warn(`⚠️  Failed to upsert users:`, error.message)

@@ -1,4 +1,4 @@
-import '../../config/env' 
+import '../config/env' 
 import { promises as fs } from 'node:fs'
 import path from 'node:path'
 import { ipfsCidToUrl } from '../utils/ipfsUrl/ipfsCidToUrl'

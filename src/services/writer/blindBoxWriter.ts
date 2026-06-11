@@ -63,11 +63,7 @@ export const handleBoxCreated = async (
     const sanitizedBoxData = sanitizeForDb(boxData) as Database['public']['Tables']['boxes']['Insert']
     
     // Use upsert to avoid duplicate key errors (update if box exists, otherwise insert)
-    const { error } = await db
-        .from('boxes')
-        .upsert(sanitizedBoxData, {
-            onConflict: 'network,layer,id', // Handle primary key conflict
-        })
+    const { error } = await db.upsert('boxes', sanitizedBoxData)
 
     if (error) {
         console.warn(`⚠️  Failed to upsert box ${boxId}:`, error.message)
@@ -77,7 +73,7 @@ export const handleBoxCreated = async (
 
     if (
         CONTROLLER.queryList.includes('metadataBox') && 
-        CONTROLLER.writeToSupabase
+        CONTROLLER.writeToDatabase
     ) {
         // write metadata
         if (boxInfoCID) {
@@ -140,10 +136,11 @@ export const handleBoxUpdate = async (
 
     // Sanitize update object to ensure no BigInt
     const sanitizedUpdates = sanitizeForDb(updates) as Database['public']['Tables']['boxes']['Update']
-    const { error } = await db
-        .from('boxes')
-        .update(sanitizedUpdates)
-        .match({ network: scope.network as 'testnet' | 'mainnet', layer: scope.layer as 'sapphire', id: boxId })
+    const { error } = await db.update('boxes', sanitizedUpdates, {
+        network: scope.network as 'testnet' | 'mainnet',
+        layer: scope.layer as 'sapphire',
+        id: boxId
+    })
 
     if (error) {
         console.warn(`⚠️  Failed to update box ${boxId} (${event.eventName}):`, error.message)

@@ -15,15 +15,11 @@ export const handleForwarderState = async (
 ): Promise<void> => {
     const isPaused = event.eventName === 'Paused'
 
-    const { error } = await db
-        .from('forwarder_state')
-        .upsert({
+    const { error } = await db.upsert('forwarder_state', {
             network: scope.network as 'testnet' | 'mainnet',
             layer: scope.layer as 'sapphire',
             id: 'forwarder',
             paused: isPaused,
-        } as Database['public']['Tables']['forwarder_state']['Insert'], {
-            onConflict: 'network,layer,id',
         })
 
     if (error) {

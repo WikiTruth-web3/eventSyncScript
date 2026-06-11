@@ -10,6 +10,14 @@ import { ContractName } from '../contractsConfig/types'
 import { OUTPUT_CONFIG } from '../config/sync'
 import type { RuntimeContractSyncResult } from '../sync-engine/sync/runtimeContractSyncer'
 
+export interface FilteredEventData {
+    eth_tx_hash?: string
+    evm_log_name?: string
+    evm_log_params?: any[]
+    round: number
+    timestamp: string
+}
+
 export interface EventDataPayload {
     fetchedAt: string
     scope: RuntimeScope
@@ -29,7 +37,7 @@ export interface EventDataPayload {
     pagesFetched: number
     totalFetched: number
     eventCount: number
-    rawEvents: unknown[]
+    rawEvents: FilteredEventData[]
 }
 
 /**
@@ -55,6 +63,14 @@ const buildEventDataPayload = (
     contract: ContractName,
     syncResult: RuntimeContractSyncResult,
 ): EventDataPayload => {
+    const filteredEvents = syncResult.fetchResult.rawEvents.map(event => ({
+        eth_tx_hash: event.eth_tx_hash ?? event.tx_hash,
+        evm_log_name: event.evm_log_name,
+        evm_log_params: event.evm_log_params,
+        round: event.round,
+        timestamp: event.timestamp,
+    }))
+
     return {
         fetchedAt: new Date().toISOString(),
         scope,
@@ -64,8 +80,7 @@ const buildEventDataPayload = (
         pagesFetched: syncResult.fetchResult.pagesFetched,
         totalFetched: syncResult.fetchResult.totalFetched,
         eventCount: syncResult.fetchResult.rawEvents.length,
-        // Only save raw event data, don't save decoded data
-        rawEvents: syncResult.fetchResult.rawEvents,
+        rawEvents: filteredEvents,
     }
 }
 

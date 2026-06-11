@@ -8,7 +8,7 @@ export type QueryListType =
   | 'forwarder';
 
 export interface CommonType {
-    writeToSupabase: boolean;
+    writeToDatabase: boolean;
     restart: boolean;
     isUpdateLastBlock: boolean;
     queryList: QueryListType[];
@@ -18,9 +18,9 @@ export interface CommonType {
 // ==========================================
 
 const COMMON_CONSTANT = {
-    writeToSupabase: true,
-    restart: false,
-    isUpdateLastBlock: true,
+    writeToDatabase: false,
+    restart: true,
+    isUpdateLastBlock: false,
 }
 
 const controller = (list: QueryListType[]): CommonType => {

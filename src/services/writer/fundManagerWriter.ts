@@ -56,15 +56,12 @@ export const handlePayment = async (
         user_id: userId,
         token: token.toLowerCase(),
         amount: amount,
+        type:'any',
         timestamp: timestamp,
         transaction_hash: hashToBytea(txHash),
     }) as Database['public']['Tables']['payments']['Insert']
 
-    const { error } = await db
-        .from('payments')
-        .upsert(paymentData, {
-            onConflict: 'network,layer,id'
-        })
+    const { error } = await db.upsert('payments', paymentData)
 
     if (error) {
         console.error(`❌ Failed to insert payment for box ${boxId}:`, error.message)
@@ -114,11 +111,7 @@ export const handleOrderAmountWithdraw = async (
         transaction_hash: hashToBytea(txHash),
     }) as Database['public']['Tables']['order_refund_withdraws']['Insert']
 
-    const { error } = await db
-        .from('order_refund_withdraws')
-        .upsert(withdrawData, {
-            onConflict: 'network,layer,id'
-        })
+    const { error } = await db.upsert('order_refund_withdraws', withdrawData)
 
     if (error) {
         console.error(`❌ Failed to insert withdraw for user ${userId} :`, error.message)
@@ -164,11 +157,7 @@ export const handleRefundAmountWithdraw = async (
         transaction_hash: hashToBytea(txHash),
     }) as Database['public']['Tables']['order_refund_withdraws']['Insert']
 
-    const { error } = await db
-        .from('order_refund_withdraws')
-        .upsert(withdrawData, {
-            onConflict: 'network,layer,id'
-        })
+    const { error } = await db.upsert('order_refund_withdraws', withdrawData)
 
     if (error) {
         console.error(`❌ Failed to insert withdraw for user ${userId} :`, error.message)
@@ -212,11 +201,7 @@ export const handleRewardAdded = async (
         transaction_hash: hashToBytea(txHash),
     }) as Database['public']['Tables']['rewards_addeds']['Insert']
 
-    const { error } = await db
-        .from('rewards_addeds')
-        .upsert(rewardData, {
-            onConflict: 'network,layer,id'
-        })
+    const { error } = await db.upsert('rewards_addeds', rewardData)
 
     if (error) {
         console.error(`❌ Failed to insert reward for box ${boxId} :`, error.message)
@@ -259,11 +244,7 @@ export const handleRewardsWithdraw = async (
         transaction_hash: hashToBytea(txHash),
     }) as Database['public']['Tables']['rewards_withdraws']['Insert']
 
-    const { error } = await db
-        .from('rewards_withdraws')
-        .upsert(withdrawData, {
-            onConflict: 'network,layer,id'
-        })
+    const { error } = await db.upsert('rewards_withdraws', withdrawData)
 
     if (error) {
         console.error(`❌ Failed to insert reward withdraw for user ${userId}:`, error.message)
@@ -282,15 +263,11 @@ export const handleFundManagerState = async (
 ): Promise<void> => {
     const isPaused = event.eventName === 'Paused'
 
-    const { error } = await db
-        .from('fund_manager_state')
-        .upsert({
+    const { error } = await db.upsert('fund_manager_state', {
             network: scope.network as 'testnet' | 'mainnet',
             layer: scope.layer as 'sapphire',
             id: 'fundManager',
             paused: isPaused,
-        }, {
-            onConflict: 'network,layer,id',
         })
 
     if (error) {
@@ -305,18 +282,11 @@ export const handleFundManagerState = async (
  * This is required by token_total_amounts table foreign key constraint
  */
 export const ensureFundManagerStateExists = async (scope: RuntimeScope): Promise<void> => {
-    const { error } = await db
-        .from('fund_manager_state')
-        .upsert(
-            {
+    const { error } = await db.upsert('fund_manager_state', {
                 network: scope.network as 'testnet' | 'mainnet',
                 layer: scope.layer as 'sapphire',
                 id: 'fundManager',
-            },
-            {
-                onConflict: 'network,layer,id',
-            }
-        )
+            })
 
     if (error) {
         console.warn(`⚠️  Failed to ensure fund_manager_state exists:`, error.message)

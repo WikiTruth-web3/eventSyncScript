@@ -109,9 +109,7 @@ export const upsertMetadataFromEvents = async (
     // Sanitize all records to ensure no BigInt
     const sanitizedRecord = sanitizeForDb(record) as Database['public']['Tables']['metadata_boxes']['Insert']
     
-    const { error } = await db.from('metadata_boxes').upsert(sanitizedRecord, {
-      onConflict: 'network,layer,id',
-    })
+    const { error } = await db.upsert('metadata_boxes', sanitizedRecord)
     
     if (error) {
       throw new Error(`Failed to upsert metadata_boxes: ${error.message}`)

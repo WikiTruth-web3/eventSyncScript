@@ -36,10 +36,7 @@ export const handleBoxListed = async (
         updates.accepted_token = acceptedToken.toLowerCase()
     }
 
-    const { error } = await db
-        .from('boxes')
-        .update(updates)
-        .match({ network: scope.network as 'testnet' | 'mainnet', layer: scope.layer as 'sapphire', id: boxId })
+    const { error } = await db.update('boxes', updates, { network: scope.network as 'testnet' | 'mainnet', layer: scope.layer as 'sapphire', id: boxId })
 
     if (error) {
         console.warn(`⚠️  Failed to update box ${boxId} for BoxListed:`, error.message)
@@ -63,10 +60,7 @@ const _updateBuyerPurchaseTimestamp = async (
         purchase_timestamp: timestamp,
     }) as Database['public']['Tables']['boxes']['Update']
 
-    const { error } = await db
-        .from('boxes')
-        .update(updates)
-        .match({ network: scope.network as 'testnet' | 'mainnet', layer: scope.layer as 'sapphire', id: boxId })
+    const { error } = await db.update('boxes', updates, { network: scope.network as 'testnet' | 'mainnet', layer: scope.layer as 'sapphire', id: boxId })
 
     if (error) {
         console.warn(`⚠️  Failed to update box ${boxId} buyer_id: ${userId} and purchase_timestamp: ${timestamp}`, error.message)
@@ -125,11 +119,7 @@ export const handleBidPlaced = async (
     }) as Database['public']['Tables']['box_bidders']['Insert']
 
     // First insert bidder record
-    const { error: bidderError } = await db
-        .from('box_bidders')
-        .upsert(bidderData, {
-            onConflict: 'network,layer,id',
-        })
+    const { error: bidderError } = await db.upsert('box_bidders', bidderData)
 
     if (bidderError) {
         console.error(`❌ Failed to upsert bidder ${userId} for box ${boxId}:`, bidderError.message)
@@ -159,10 +149,7 @@ export const handleCompleterAssigned = async (
         complete_timestamp: timestamp,
     }) as Database['public']['Tables']['boxes']['Update']
 
-    const { error } = await db
-        .from('boxes')
-        .update(updates)
-        .match({ network: scope.network as 'testnet' | 'mainnet', layer: scope.layer as 'sapphire', id: boxId })
+    const { error } = await db.update('boxes', updates, { network: scope.network as 'testnet' | 'mainnet', layer: scope.layer as 'sapphire', id: boxId })
 
     if (error) {
         console.warn(`⚠️  Failed to update box ${boxId} for CompleterAssigned:`, error.message)
@@ -188,10 +175,7 @@ export const handleRequestDeadlineChanged = async (
         request_refund_deadline: deadline,
     }) as Database['public']['Tables']['boxes']['Update']
 
-    const { error } = await db
-        .from('boxes')
-        .update(updates)
-        .match({ network: scope.network as 'testnet' | 'mainnet', layer: scope.layer as 'sapphire', id: boxId })
+    const { error } = await db.update('boxes', updates, { network: scope.network as 'testnet' | 'mainnet', layer: scope.layer as 'sapphire', id: boxId })
 
     if (error) {
         console.warn(`⚠️  Failed to update box ${boxId} for RequestDeadlineChanged:`, error.message)
@@ -217,10 +201,7 @@ export const handleReviewDeadlineChanged = async (
         review_deadline: deadline,
     }) as Database['public']['Tables']['boxes']['Update']
 
-    const { error } = await db
-        .from('boxes')
-        .update(updates)
-        .match({ network: scope.network as 'testnet' | 'mainnet', layer: scope.layer as 'sapphire', id: boxId })
+    const { error } = await db.update('boxes', updates, { network: scope.network as 'testnet' | 'mainnet', layer: scope.layer as 'sapphire', id: boxId })
 
     if (error) {
         console.warn(`⚠️  Failed to update box ${boxId} for ReviewDeadlineChanged:`, error.message)
@@ -248,10 +229,7 @@ export const handleRefundPermitChanged = async (
         refund_permit: permission,
     }) as Database['public']['Tables']['boxes']['Update']
 
-    const { error } = await db
-        .from('boxes')
-        .update(updates)
-        .match({ network: scope.network as 'testnet' | 'mainnet', layer: scope.layer as 'sapphire', id: boxId })
+    const { error } = await db.update('boxes', updates, { network: scope.network as 'testnet' | 'mainnet', layer: scope.layer as 'sapphire', id: boxId })
 
     if (error) {
         console.warn(`⚠️  Failed to update box ${boxId} for RefundPermitChanged:`, error.message)

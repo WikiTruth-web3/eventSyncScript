@@ -3,7 +3,6 @@ import type { RuntimeScope } from '../oasisQuery/types/searchScope'
 import { syncRuntimeContractEvents } from '../sync-engine/sync'
 import { DEFAULT_SCOPE,} from '../config/sync'
 import { saveEventDataToFile, shouldSaveEventDataToFile } from '../dev-tools/saveEventDataToFile'
-import { decodeContractEvents } from '../utils/decodeEvents'
 import { updateSyncStatus } from '../sync-engine/state'
 import { CONTROLLER } from '../controller'
 import { persistExchangeSync } from '../services/writer/exchangeWriter'
@@ -26,20 +25,14 @@ export async function fetchExchangeEvents(
 ): Promise<FetchExchangeEventsResult> {
   console.log(`🌐 Querying Exchange: network=${scope.network}, layer=${scope.layer}`)
 
-  const syncResult = await syncRuntimeContractEvents({
+  const syncResult = await syncRuntimeContractEvents<Record<string, unknown>>({
     scope,
     contract: ContractName.EXCHANGE,
     limit: Number(process.env.EVENT_SYNC_LIMIT),
     batchSize: Number(process.env.EVENT_SYNC_BATCH_SIZE),
     fromRound: lastSyncedBlock,
   })
-
-  // Decode events using unified decoding utility function
-  const decodedEvents = decodeContractEvents(
-    syncResult.fetchResult.rawEvents,
-    ContractName.EXCHANGE,
-    scope,
-  )
+  const decodedEvents = syncResult.decodedEvents
 
   // NOTE: Important to reverse the events to make sure the events are in the right order
   decodedEvents.reverse()
@@ -47,23 +40,23 @@ export async function fetchExchangeEvents(
   console.log(`✅ Fetched ${decodedEvents.length} decoded events (total ${syncResult.fetchResult.totalFetched} raw events, fetched ${syncResult.fetchResult.pagesFetched} pages)`)
 
   // Phase 2: Process each contract independently in a specific order to handle dependencies
-  if (CONTROLLER.writeToSupabase && decodedEvents.length > 0) {
+  if (CONTROLLER.writeToDatabase && decodedEvents.length > 0) {
     await persistExchangeSync(DEFAULT_SCOPE, ContractName.EXCHANGE, decodedEvents)
   }
 
-  let outputPath: string | null = null
-  if (shouldSaveEventDataToFile()) {
-    outputPath = await saveEventDataToFile(scope, ContractName.EXCHANGE, syncResult)
-  }
 
   console.log(`📊 Sync status: from block ${syncResult.cursorBefore.lastBlock} to ${syncResult.cursorAfter.lastBlock}`)
 
   const block_number = syncResult.cursorAfter.lastBlock
 
   // Phase 3: Update sync status
-      if (CONTROLLER.isUpdateLastBlock) {
-        await updateSyncStatus(DEFAULT_SCOPE, ContractName.EXCHANGE, block_number)
-      }
+  if (CONTROLLER.isUpdateLastBlock) {
+    await updateSyncStatus(DEFAULT_SCOPE, ContractName.EXCHANGE, block_number)
+  }
+  let outputPath: string | null = null
+  if (shouldSaveEventDataToFile()) {
+    outputPath = await saveEventDataToFile(scope, ContractName.EXCHANGE, syncResult)
+  }
 
   return {
     outputPath,

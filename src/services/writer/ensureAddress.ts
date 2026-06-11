@@ -24,11 +24,7 @@ export const ensureUserAddressExists = async (
     is_blacklisted: false,
   }) as Database['public']['Tables']['user_addresses']['Insert']
 
-  const { error } = await db
-    .from('user_addresses')
-    .upsert(addressData, {
-      onConflict: 'network,layer,id',
-    })
+  const { error } = await db.upsert('user_addresses', addressData)
 
   if (error) {
     console.warn(`⚠️  Failed to upsert user address ${address}:`, error.message)
@@ -67,11 +63,7 @@ export const ensureAddressExist = async (
         sanitizeForDb(record) as Database['public']['Tables']['user_addresses']['Insert']
     )
     
-    const { error } = await db
-        .from('user_addresses')
-        .upsert(sanitizedAddressRecords, {
-            onConflict: 'network,layer,id',
-        })
+    const { error } = await db.upsert('user_addresses', sanitizedAddressRecords)
 
     if (error) {
         console.warn(`⚠️  Failed to upsert users:`, error.message)

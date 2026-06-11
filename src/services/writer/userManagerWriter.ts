@@ -37,11 +37,7 @@ const _updateAddressBlacklist = async (
         is_blacklisted: isBlacklisted,
     }) as Database['public']['Tables']['user_addresses']['Insert']
 
-    const { error } = await db
-        .from('user_addresses')
-        .upsert(addressData, {
-            onConflict: 'network,layer,id',
-        })
+    const { error } = await db.upsert('user_addresses', addressData)
 
     if (error) {
         console.warn(`⚠️  Failed to update blacklist status for user ${address}:`, error.message)

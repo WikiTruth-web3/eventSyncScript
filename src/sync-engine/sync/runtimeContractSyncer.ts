@@ -5,6 +5,7 @@ import { fetchRuntimeContractEvents } from '../events'
 import type { EventFetchResult } from '../events/types'
 import { getSyncCursor } from '../state'
 import type { ContractSyncKey, SyncCursor } from '../state'
+import { decodeContractEvents, type DecodedRuntimeEvent } from '../../utils/decodeEvents'
 
 export interface RuntimeContractSyncOptions {
   scope: RuntimeScope
@@ -22,6 +23,7 @@ export interface RuntimeContractSyncResult<TArgs = Record<string, unknown>> {
   cursorBefore: SyncCursor
   cursorAfter: SyncCursor
   fetchResult: EventFetchResult<TArgs>
+  decodedEvents: DecodedRuntimeEvent<TArgs>[]
 }
 
 const buildCursorKey = (scope: RuntimeScope, contract: ContractName): ContractSyncKey => ({
@@ -96,10 +98,18 @@ export const syncRuntimeContractEvents = async <TArgs = Record<string, unknown>>
       }
     : cursor
 
-  // Result: return cursor before and after block range fetched
+  // Decode fetched events using our smart hybrid decoder
+  const decodedEvents = decodeContractEvents<TArgs>(
+    fetchResult.rawEvents,
+    contract,
+    scope,
+  )
+
+  // Result: return cursor before and after block range fetched, along with decodedEvents
   return {
     cursorBefore: cursor, // Return cursor before script started
     cursorAfter: nextCursor, // Return cursor after script finished
     fetchResult,
+    decodedEvents,
   }
 }

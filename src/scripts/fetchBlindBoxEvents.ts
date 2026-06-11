@@ -4,7 +4,6 @@ import { syncRuntimeContractEvents } from '../sync-engine/sync'
 import { DEFAULT_SCOPE,} from '../config/sync'
 import { saveEventDataToFile, shouldSaveEventDataToFile } from '../dev-tools/saveEventDataToFile'
 import { updateSyncStatus } from '../sync-engine/state'
-import { decodeContractEvents } from '../utils/decodeEvents'
 import { persistBlindBoxSync } from '../services/writer/blindBoxWriter'
 import { CONTROLLER } from '../controller'
 import type { DecodedRuntimeEvent } from '../oasisQuery/app/services/events'
@@ -27,20 +26,14 @@ export async function fetchBlindBoxEvents(
 ): Promise<FetchBlindBoxEventsResult> {
   console.log(`🌐 Querying BlindBox: network=${scope.network}, layer=${scope.layer}`)
 
-  const syncResult = await syncRuntimeContractEvents({
+  const syncResult = await syncRuntimeContractEvents<Record<string, unknown>>({
     scope,
     contract: ContractName.BLIND_BOX,
     limit: Number(process.env.EVENT_SYNC_LIMIT ),
     batchSize: Number(process.env.EVENT_SYNC_BATCH_SIZE),
     fromRound: lastSyncedBlock,
   })
-
-  // Decode events using unified decoding utility function (does not depend on underlying oasisQuery module's decoding results)
-  const decodedEvents = decodeContractEvents(
-    syncResult.fetchResult.rawEvents,
-    ContractName.BLIND_BOX,
-    scope,
-  )
+  const decodedEvents = syncResult.decodedEvents
 
   // NOTE: Important to reverse the events to make sure the events are in the right order
   decodedEvents.reverse()
@@ -48,16 +41,10 @@ export async function fetchBlindBoxEvents(
   console.log(`✅ Fetched ${decodedEvents.length} decoded events (total ${syncResult.fetchResult.totalFetched} raw events, fetched ${syncResult.fetchResult.pagesFetched} pages)`)
 
   // Phase 2: Process each contract independently in a specific order to handle dependencies
-  if (CONTROLLER.writeToSupabase && decodedEvents.length > 0) {
+  if (CONTROLLER.writeToDatabase && decodedEvents.length > 0) {
     await persistBlindBoxSync(DEFAULT_SCOPE, ContractName.BLIND_BOX, decodedEvents)
   }
 
-  // Optional: Save raw event data to file (for debugging)
-  // Enable via environment variable EVENT_SYNC_SAVE_JSON=true
-  let outputPath: string | null = null
-  if (shouldSaveEventDataToFile()) {
-    outputPath = await saveEventDataToFile(scope, ContractName.BLIND_BOX, syncResult)
-  }
 
   console.log(`📊 Sync status: from block ${syncResult.cursorBefore.lastBlock} to ${syncResult.cursorAfter.lastBlock}`)
 
@@ -67,6 +54,12 @@ export async function fetchBlindBoxEvents(
   // Phase 3: Update sync status ====================================
   if (CONTROLLER.isUpdateLastBlock) {
     await updateSyncStatus(DEFAULT_SCOPE, ContractName.BLIND_BOX, block_number)
+  }
+  // Optional: Save raw event data to file (for debugging)
+  // Enable via environment variable EVENT_SYNC_SAVE_JSON=true
+  let outputPath: string | null = null
+  if (shouldSaveEventDataToFile()) {
+    outputPath = await saveEventDataToFile(scope, ContractName.BLIND_BOX, syncResult)
   }
 
   return {

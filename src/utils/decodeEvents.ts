@@ -8,6 +8,7 @@ import type { RuntimeScope } from '../oasisQuery/types/searchScope'
 import { ContractName } from '../contractsConfig/types'
 import { getContractEventSignatures } from '../contractsConfig/eventSignatures/events'
 import { decodeRuntimeEvents, type DecodedRuntimeEvent } from '../oasisQuery/app/services/events'
+export type { DecodedRuntimeEvent } from '../oasisQuery/app/services/events'
 import { NETWORK_CONTRACTS } from '../contractsConfig/contracts'
 import { SupportedChainId } from '../contractsConfig/types'
 
@@ -63,47 +64,44 @@ export const decodeContractEvents = <TArgs = Record<string, unknown>>(
     }
 
     const targetAddress = contractAddress.toLowerCase()
-    
-    // Check if manual decoding is enabled (default to true)
-    const enableDecoding = process.env.ENABLE_EVENT_DECODING !== 'false'
+    const decodedEvents: DecodedRuntimeEvent<TArgs>[] = []
+    const eventSignatures = getContractEventSignatures(contractName)
 
-    let decodedEvents: DecodedRuntimeEvent<TArgs>[] = []
+    for (const event of rawEvents) {
+        if (event.type !== 'evm.log') continue
 
-    if (enableDecoding) {
-        // Get event signatures
-        const eventSignatures = getContractEventSignatures(contractName)
-        if (!eventSignatures || eventSignatures.length === 0) {
-            console.warn(`⚠️  Contract ${contractName} has no event signature configuration`)
-            return []
-        }
+        const rawAddress = (event.body as any)?.address ?? (event.body as any)?.eth_address ?? (event.body as any)?.contract_address
+        const address = normalizeHex(rawAddress)
+        if (address !== targetAddress) continue
 
-        // Decode events using manual ABI (for Proxy contracts or encrypted events)
-        decodedEvents = decodeRuntimeEvents<TArgs>(rawEvents, {
-            contractAddress,
-            eventSignatures,
-        })
-    } else {
-        // Use Nexus intuitive events (for standard contracts already indexed by Nexus)
-        for (const event of rawEvents) {
-            if (event.type !== 'evm.log') continue
-            
-            const rawAddress = (event.body as any)?.address ?? (event.body as any)?.eth_address ?? (event.body as any)?.contract_address
-            const address = normalizeHex(rawAddress)
-            
-            if (address === targetAddress && (event as any).evm_log_name) {
-                const args: Record<string, unknown> = {}
-                const params = (event as any).evm_log_params || []
-                for (const param of params) {
-                    if (param.name) {
-                        args[param.name] = param.value
-                    }
+        // 1. If Nexus has already decoded this event, reuse the decoded name and parameters directly
+        if ((event as any).evm_log_name) {
+            const args: Record<string, unknown> = {}
+            const params = (event as any).evm_log_params || []
+            for (const param of params) {
+                if (param.name) {
+                    args[param.name] = param.value
                 }
+            }
 
-                decodedEvents.push({
-                    eventName: (event as any).evm_log_name,
-                    args: args as TArgs,
-                    raw: event,
+            decodedEvents.push({
+                eventName: (event as any).evm_log_name,
+                args: args as TArgs,
+                raw: event,
+            })
+        } 
+        // 2. If it is not decoded by Nexus (unverified contract), fall back to local ABI decoding
+        else if (eventSignatures && eventSignatures.length > 0) {
+            try {
+                const localDecoded = decodeRuntimeEvents<TArgs>([event], {
+                    contractAddress,
+                    eventSignatures,
                 })
+                if (localDecoded.length > 0) {
+                    decodedEvents.push(localDecoded[0])
+                }
+            } catch (err) {
+                console.debug(`Skipped decoding log at block ${event.round} via local ABI`, err)
             }
         }
     }

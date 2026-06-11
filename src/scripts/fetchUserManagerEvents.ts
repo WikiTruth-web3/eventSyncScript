@@ -3,7 +3,6 @@ import type { RuntimeScope } from '../oasisQuery/types/searchScope'
 import { syncRuntimeContractEvents } from '../sync-engine/sync'
 import { DEFAULT_SCOPE,} from '../config/sync'
 import { saveEventDataToFile, shouldSaveEventDataToFile } from '../dev-tools/saveEventDataToFile'
-import { decodeContractEvents } from '../utils/decodeEvents'
 import { updateSyncStatus } from '../sync-engine/state'
 import { persistUserManagerSync } from '../services/writer/userManagerWriter'
 import { CONTROLLER } from '../controller'
@@ -27,20 +26,14 @@ export async function fetchUserManagerEvents(
 ): Promise<FetchUserManagerEventsResult> {
     console.log(`🌐 Querying UserManager events: network=${scope.network}, layer=${scope.layer}`)
 
-    const syncResult = await syncRuntimeContractEvents({
+    const syncResult = await syncRuntimeContractEvents<Record<string, unknown>>({
         scope,
         contract: ContractName.USER_MANAGER,
         limit: Number(process.env.EVENT_SYNC_LIMIT),
         batchSize: Number(process.env.EVENT_SYNC_BATCH_SIZE),
         fromRound: lastSyncedBlock,
     })
-
-    // Decode events using unified decoding utility function
-    const decodedEvents = decodeContractEvents(
-        syncResult.fetchResult.rawEvents,
-        ContractName.USER_MANAGER,
-        scope,
-    )
+    const decodedEvents = syncResult.decodedEvents
 
     // NOTE: Important to reverse the events to make sure the events are in the right order
     decodedEvents.reverse()
@@ -48,14 +41,10 @@ export async function fetchUserManagerEvents(
     console.log(`✅ Fetched ${decodedEvents.length} decoded events for UserManager`)
 
     // Phase 2: Process each contract independently in a specific order to handle dependencies
-    if (CONTROLLER.writeToSupabase && decodedEvents.length > 0) {
+    if (CONTROLLER.writeToDatabase && decodedEvents.length > 0) {
         await persistUserManagerSync(DEFAULT_SCOPE, ContractName.USER_MANAGER, decodedEvents)
     }
 
-    let outputPath: string | null = null
-    if (shouldSaveEventDataToFile()) {
-        outputPath = await saveEventDataToFile(scope, ContractName.USER_MANAGER, syncResult)
-    }
 
     console.log(`📊 Sync status: from block ${syncResult.cursorBefore.lastBlock} to ${syncResult.cursorAfter.lastBlock}`)
 
@@ -63,7 +52,11 @@ export async function fetchUserManagerEvents(
 
     // Phase 3: Update sync status
     if (CONTROLLER.isUpdateLastBlock) {
-      await updateSyncStatus(DEFAULT_SCOPE, ContractName.USER_MANAGER, block_number)
+        await updateSyncStatus(DEFAULT_SCOPE, ContractName.USER_MANAGER, block_number)
+    }
+    let outputPath: string | null = null
+    if (shouldSaveEventDataToFile()) {
+        outputPath = await saveEventDataToFile(scope, ContractName.USER_MANAGER, syncResult)
     }
 
     return {

@@ -1,4 +1,5 @@
 
+// @ts-ignore
 import rawEventsBlindBox from '../../data/rawEvents/truth_boxEvents-testnet-sapphire.json'
 
 async function main () {

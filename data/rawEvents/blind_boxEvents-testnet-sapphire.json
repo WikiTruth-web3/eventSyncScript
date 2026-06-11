@@ -1,13 +1,13 @@
 {
-  "fetchedAt": "2026-06-10T09:43:34.317Z",
+  "fetchedAt": "2026-06-11T15:57:12.242Z",
   "scope": {
     "network": "testnet",
     "layer": "sapphire"
   },
   "contract": "BLIND_BOX",
   "cursorBefore": {
-    "lastBlock": 17389000,
-    "lastTimestamp": "2026-06-10 09:37:06"
+    "lastBlock": 17389621,
+    "lastTimestamp": "2026-06-11 02:55:13"
   },
   "cursorAfter": {
     "lastBlock": 17389621,
@@ -20,14 +20,6 @@
   "eventCount": 28,
   "rawEvents": [
     {
-      "body": {
-        "address": "J6DaH8JePQfQe/mqiEzYSviaz1c=",
-        "data": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY=",
-        "topics": [
-          "9dqCsWSfPhv1Y7rxrtcFdcr5vaUkFAKa/JI7vOKOmd0=",
-          "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAk="
-        ]
-      },
       "eth_tx_hash": "06ad8d4b7cabafbd1d51247ecb04086dedb3b81227668a69529fc306b8f21648",
       "evm_log_name": "BoxStatusChanged",
       "evm_log_params": [
@@ -43,21 +35,9 @@
         }
       ],
       "round": 17389621,
-      "timestamp": "2026-06-06T15:43:35Z",
-      "tx_hash": "5dccd977ebd586845180dc3d775ed2533b83a14f915b3e7f0c1383efdde50310",
-      "tx_index": 0,
-      "type": "evm.log"
+      "timestamp": "2026-06-06T15:43:35Z"
     },
     {
-      "body": {
-        "address": "J6DaH8JePQfQe/mqiEzYSviaz1c=",
-        "data": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAO2JhZmtyZWljZDc2bWV4M2FjczM0Mng0a3c0cGpjaXF6aTRvb2dmdHRpY3NjcTNzNDVyZGQyZXJsdDNtAAAAAAA=",
-        "topics": [
-          "b4tyqfTeLQEseP5E5NEohWzeNZM4MoJB6DrRuF8eeFs=",
-          "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAk=",
-          "9WcG/Oy0friqHSnTZ21b/PrE/S+gtU8ZzOVtHP3Nqs8="
-        ]
-      },
       "eth_tx_hash": "06ad8d4b7cabafbd1d51247ecb04086dedb3b81227668a69529fc306b8f21648",
       "evm_log_name": "BoxCreated",
       "evm_log_params": [
@@ -78,21 +58,9 @@
         }
       ],
       "round": 17389621,
-      "timestamp": "2026-06-06T15:43:35Z",
-      "tx_hash": "5dccd977ebd586845180dc3d775ed2533b83a14f915b3e7f0c1383efdde50310",
-      "tx_index": 0,
-      "type": "evm.log"
+      "timestamp": "2026-06-06T15:43:35Z"
     },
     {
-      "body": {
-        "address": "J6DaH8JePQfQe/mqiEzYSviaz1c=",
-        "data": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAO2JhZmtyZWloa3M0bzV4eXdoa3l6bnRoZXUzcWJjb2t0cWRybnJxejdwNXJhbmV3YjVqNmJyN2s2NGtpAAAAAAA=",
-        "topics": [
-          "b4tyqfTeLQEseP5E5NEohWzeNZM4MoJB6DrRuF8eeFs=",
-          "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAg=",
-          "9WcG/Oy0friqHSnTZ21b/PrE/S+gtU8ZzOVtHP3Nqs8="
-        ]
-      },
       "eth_tx_hash": "f69f569575591125dfe077c6f1a7b6c66395609568e0f7052e4b339efeac5d03",
       "evm_log_name": "BoxCreated",
       "evm_log_params": [
@@ -113,20 +81,9 @@
         }
       ],
       "round": 17389617,
-      "timestamp": "2026-06-06T15:43:13Z",
-      "tx_hash": "60027fda423c656cf56fdf8c6eac94e6872e55d41ac9f0a29dce96d828102457",
-      "tx_index": 0,
-      "type": "evm.log"
+      "timestamp": "2026-06-06T15:43:13Z"
     },
     {
-      "body": {
-        "address": "J6DaH8JePQfQe/mqiEzYSviaz1c=",
-        "data": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAGo4Bos=",
-        "topics": [
-          "tQtJk46RWwqznpmi0IEOGQ1qN3ZH7wbsRbHlS4kpaKY=",
-          "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAg="
-        ]
-      },
       "eth_tx_hash": "f69f569575591125dfe077c6f1a7b6c66395609568e0f7052e4b339efeac5d03",
       "evm_log_name": "DeadlineChanged",
       "evm_log_params": [
@@ -142,20 +99,9 @@
         }
       ],
       "round": 17389617,
-      "timestamp": "2026-06-06T15:43:13Z",
-      "tx_hash": "60027fda423c656cf56fdf8c6eac94e6872e55d41ac9f0a29dce96d828102457",
-      "tx_index": 0,
-      "type": "evm.log"
+      "timestamp": "2026-06-06T15:43:13Z"
     },
     {
-      "body": {
-        "address": "J6DaH8JePQfQe/mqiEzYSviaz1c=",
-        "data": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAbGuTW4u9QAAA=",
-        "topics": [
-          "iqT6UmSKbRXtzooXnHkshvNxnQzDxXLPkPkZSPDyy2g=",
-          "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAg="
-        ]
-      },
       "eth_tx_hash": "f69f569575591125dfe077c6f1a7b6c66395609568e0f7052e4b339efeac5d03",
       "evm_log_name": "PriceChanged",
       "evm_log_params": [
@@ -171,21 +117,9 @@
         }
       ],
       "round": 17389617,
-      "timestamp": "2026-06-06T15:43:13Z",
-      "tx_hash": "60027fda423c656cf56fdf8c6eac94e6872e55d41ac9f0a29dce96d828102457",
-      "tx_index": 0,
-      "type": "evm.log"
+      "timestamp": "2026-06-06T15:43:13Z"
     },
     {
-      "body": {
-        "address": "J6DaH8JePQfQe/mqiEzYSviaz1c=",
-        "data": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAO2JhZmtyZWlmM2h1N3Ntd3VmbWpqMmtrcXBsbnNkNDZ1enE0bHhoanpxdHRhaGRpdjZneHhoM2ZkeHI0AAAAAAA=",
-        "topics": [
-          "b4tyqfTeLQEseP5E5NEohWzeNZM4MoJB6DrRuF8eeFs=",
-          "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAc=",
-          "9WcG/Oy0friqHSnTZ21b/PrE/S+gtU8ZzOVtHP3Nqs8="
-        ]
-      },
       "eth_tx_hash": "fa1c6e3e04f28fd2731773651be0040e45584a0f22cbf0f2f4a80f123c76416e",
       "evm_log_name": "BoxCreated",
       "evm_log_params": [
@@ -206,20 +140,9 @@
         }
       ],
       "round": 17389613,
-      "timestamp": "2026-06-06T15:42:50Z",
-      "tx_hash": "d0137ee363a5e0b038e7c2703bfeeb1e4aa830a63d0370f09a72747b48519995",
-      "tx_index": 1,
-      "type": "evm.log"
+      "timestamp": "2026-06-06T15:42:50Z"
     },
     {
-      "body": {
-        "address": "J6DaH8JePQfQe/mqiEzYSviaz1c=",
-        "data": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAGo4BnQ=",
-        "topics": [
-          "tQtJk46RWwqznpmi0IEOGQ1qN3ZH7wbsRbHlS4kpaKY=",
-          "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAc="
-        ]
-      },
       "eth_tx_hash": "fa1c6e3e04f28fd2731773651be0040e45584a0f22cbf0f2f4a80f123c76416e",
       "evm_log_name": "DeadlineChanged",
       "evm_log_params": [
@@ -235,20 +158,9 @@
         }
       ],
       "round": 17389613,
-      "timestamp": "2026-06-06T15:42:50Z",
-      "tx_hash": "d0137ee363a5e0b038e7c2703bfeeb1e4aa830a63d0370f09a72747b48519995",
-      "tx_index": 1,
-      "type": "evm.log"
+      "timestamp": "2026-06-06T15:42:50Z"
     },
     {
-      "body": {
-        "address": "J6DaH8JePQfQe/mqiEzYSviaz1c=",
-        "data": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAYZQEnzD3IAAA=",
-        "topics": [
-          "iqT6UmSKbRXtzooXnHkshvNxnQzDxXLPkPkZSPDyy2g=",
-          "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAc="
-        ]
-      },
       "eth_tx_hash": "fa1c6e3e04f28fd2731773651be0040e45584a0f22cbf0f2f4a80f123c76416e",
       "evm_log_name": "PriceChanged",
       "evm_log_params": [
@@ -264,21 +176,9 @@
         }
       ],
       "round": 17389613,
-      "timestamp": "2026-06-06T15:42:50Z",
-      "tx_hash": "d0137ee363a5e0b038e7c2703bfeeb1e4aa830a63d0370f09a72747b48519995",
-      "tx_index": 1,
-      "type": "evm.log"
+      "timestamp": "2026-06-06T15:42:50Z"
     },
     {
-      "body": {
-        "address": "J6DaH8JePQfQe/mqiEzYSviaz1c=",
-        "data": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAO2JhZmtyZWlkNjI1ZGQ3aWpwYno0dXFrbHV4NWNzdTN5NndicG8zdnp0aWtvNWxzdXQ1cm56aTZrejVhAAAAAAA=",
-        "topics": [
-          "b4tyqfTeLQEseP5E5NEohWzeNZM4MoJB6DrRuF8eeFs=",
-          "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY=",
-          "9WcG/Oy0friqHSnTZ21b/PrE/S+gtU8ZzOVtHP3Nqs8="
-        ]
-      },
       "eth_tx_hash": "a54b480cf121e6af8045bfe20e7b80dada56d07c3c4e33294e8538b68d28d84e",
       "evm_log_name": "BoxCreated",
       "evm_log_params": [
@@ -299,20 +199,9 @@
         }
       ],
       "round": 17389609,
-      "timestamp": "2026-06-06T15:42:27Z",
-      "tx_hash": "c3f74112d2c75061cc191062c45bff4edacd2bf695735727273724092619715a",
-      "tx_index": 0,
-      "type": "evm.log"
+      "timestamp": "2026-06-06T15:42:27Z"
     },
     {
-      "body": {
-        "address": "J6DaH8JePQfQe/mqiEzYSviaz1c=",
-        "data": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAGo4Bl0=",
-        "topics": [
-          "tQtJk46RWwqznpmi0IEOGQ1qN3ZH7wbsRbHlS4kpaKY=",
-          "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY="
-        ]
-      },
       "eth_tx_hash": "a54b480cf121e6af8045bfe20e7b80dada56d07c3c4e33294e8538b68d28d84e",
       "evm_log_name": "DeadlineChanged",
       "evm_log_params": [
@@ -328,20 +217,9 @@
         }
       ],
       "round": 17389609,
-      "timestamp": "2026-06-06T15:42:27Z",
-      "tx_hash": "c3f74112d2c75061cc191062c45bff4edacd2bf695735727273724092619715a",
-      "tx_index": 0,
-      "type": "evm.log"
+      "timestamp": "2026-06-06T15:42:27Z"
     },
     {
-      "body": {
-        "address": "J6DaH8JePQfQe/mqiEzYSviaz1c=",
-        "data": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAVrx14tYxAAAA=",
-        "topics": [
-          "iqT6UmSKbRXtzooXnHkshvNxnQzDxXLPkPkZSPDyy2g=",
-          "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY="
-        ]
-      },
       "eth_tx_hash": "a54b480cf121e6af8045bfe20e7b80dada56d07c3c4e33294e8538b68d28d84e",
       "evm_log_name": "PriceChanged",
       "evm_log_params": [
@@ -357,21 +235,9 @@
         }
       ],
       "round": 17389609,
-      "timestamp": "2026-06-06T15:42:27Z",
-      "tx_hash": "c3f74112d2c75061cc191062c45bff4edacd2bf695735727273724092619715a",
-      "tx_index": 0,
-      "type": "evm.log"
+      "timestamp": "2026-06-06T15:42:27Z"
     },
     {
-      "body": {
-        "address": "J6DaH8JePQfQe/mqiEzYSviaz1c=",
-        "data": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAO2JhZmtyZWlkcmljMndtN2RyamJma2htbjJjaGhoMzQ0bHhnZmY2ZGtrZHJneDVmanB3cWpkZTRsZjRpAAAAAAA=",
-        "topics": [
-          "b4tyqfTeLQEseP5E5NEohWzeNZM4MoJB6DrRuF8eeFs=",
-          "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAU=",
-          "9WcG/Oy0friqHSnTZ21b/PrE/S+gtU8ZzOVtHP3Nqs8="
-        ]
-      },
       "eth_tx_hash": "66a61b88ca5b9acada59720cf220f130d5d8e8ee42ccb331695377fd2fb5b32d",
       "evm_log_name": "BoxCreated",
       "evm_log_params": [
@@ -392,20 +258,9 @@
         }
       ],
       "round": 17389605,
-      "timestamp": "2026-06-06T15:42:05Z",
-      "tx_hash": "0a8b7012044feb8c8b0ab390e3123adc078421f30a40ac4b991017d6f6348155",
-      "tx_index": 0,
-      "type": "evm.log"
+      "timestamp": "2026-06-06T15:42:05Z"
     },
     {
-      "body": {
-        "address": "J6DaH8JePQfQe/mqiEzYSviaz1c=",
-        "data": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAGo4Bkc=",
-        "topics": [
-          "tQtJk46RWwqznpmi0IEOGQ1qN3ZH7wbsRbHlS4kpaKY=",
-          "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAU="
-        ]
-      },
       "eth_tx_hash": "66a61b88ca5b9acada59720cf220f130d5d8e8ee42ccb331695377fd2fb5b32d",
       "evm_log_name": "DeadlineChanged",
       "evm_log_params": [
@@ -421,20 +276,9 @@
         }
       ],
       "round": 17389605,
-      "timestamp": "2026-06-06T15:42:05Z",
-      "tx_hash": "0a8b7012044feb8c8b0ab390e3123adc078421f30a40ac4b991017d6f6348155",
-      "tx_index": 0,
-      "type": "evm.log"
+      "timestamp": "2026-06-06T15:42:05Z"
     },
     {
-      "body": {
-        "address": "J6DaH8JePQfQe/mqiEzYSviaz1c=",
-        "data": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAS+TnJntq4AAA=",
-        "topics": [
-          "iqT6UmSKbRXtzooXnHkshvNxnQzDxXLPkPkZSPDyy2g=",
-          "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAU="
-        ]
-      },
       "eth_tx_hash": "66a61b88ca5b9acada59720cf220f130d5d8e8ee42ccb331695377fd2fb5b32d",
       "evm_log_name": "PriceChanged",
       "evm_log_params": [
@@ -450,21 +294,9 @@
         }
       ],
       "round": 17389605,
-      "timestamp": "2026-06-06T15:42:05Z",
-      "tx_hash": "0a8b7012044feb8c8b0ab390e3123adc078421f30a40ac4b991017d6f6348155",
-      "tx_index": 0,
-      "type": "evm.log"
+      "timestamp": "2026-06-06T15:42:05Z"
     },
     {
-      "body": {
-        "address": "J6DaH8JePQfQe/mqiEzYSviaz1c=",
-        "data": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAO2JhZmtyZWlkMzZ6eXF1bW1rdml2aGhjY3EycHJ2YzVzZWJtejV6YmNrMjNpeW1rdHB2dWJvYWhtYm9pAAAAAAA=",
-        "topics": [
-          "b4tyqfTeLQEseP5E5NEohWzeNZM4MoJB6DrRuF8eeFs=",
-          "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQ=",
-          "9WcG/Oy0friqHSnTZ21b/PrE/S+gtU8ZzOVtHP3Nqs8="
-        ]
-      },
       "eth_tx_hash": "b8c4369e2536a1dd96038aba31a56e654b60b361d53c62d8c2a6d9806ee5fc42",
       "evm_log_name": "BoxCreated",
       "evm_log_params": [
@@ -485,20 +317,9 @@
         }
       ],
       "round": 17389601,
-      "timestamp": "2026-06-06T15:41:42Z",
-      "tx_hash": "63c7e03bf825b0f9d51f42255d30302cd5cfbb40c59b219d977d77b019b9576e",
-      "tx_index": 0,
-      "type": "evm.log"
+      "timestamp": "2026-06-06T15:41:42Z"
     },
     {
-      "body": {
-        "address": "J6DaH8JePQfQe/mqiEzYSviaz1c=",
-        "data": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAGo4BjA=",
-        "topics": [
-          "tQtJk46RWwqznpmi0IEOGQ1qN3ZH7wbsRbHlS4kpaKY=",
-          "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQ="
-        ]
-      },
       "eth_tx_hash": "b8c4369e2536a1dd96038aba31a56e654b60b361d53c62d8c2a6d9806ee5fc42",
       "evm_log_name": "DeadlineChanged",
       "evm_log_params": [
@@ -514,20 +335,9 @@
         }
       ],
       "round": 17389601,
-      "timestamp": "2026-06-06T15:41:42Z",
-      "tx_hash": "63c7e03bf825b0f9d51f42255d30302cd5cfbb40c59b219d977d77b019b9576e",
-      "tx_index": 0,
-      "type": "evm.log"
+      "timestamp": "2026-06-06T15:41:42Z"
     },
     {
-      "body": {
-        "address": "J6DaH8JePQfQe/mqiEzYSviaz1c=",
-        "data": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQQ1YaiCkwAAA=",
-        "topics": [
-          "iqT6UmSKbRXtzooXnHkshvNxnQzDxXLPkPkZSPDyy2g=",
-          "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQ="
-        ]
-      },
       "eth_tx_hash": "b8c4369e2536a1dd96038aba31a56e654b60b361d53c62d8c2a6d9806ee5fc42",
       "evm_log_name": "PriceChanged",
       "evm_log_params": [
@@ -543,21 +353,9 @@
         }
       ],
       "round": 17389601,
-      "timestamp": "2026-06-06T15:41:42Z",
-      "tx_hash": "63c7e03bf825b0f9d51f42255d30302cd5cfbb40c59b219d977d77b019b9576e",
-      "tx_index": 0,
-      "type": "evm.log"
+      "timestamp": "2026-06-06T15:41:42Z"
     },
     {
-      "body": {
-        "address": "J6DaH8JePQfQe/mqiEzYSviaz1c=",
-        "data": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAO2JhZmtyZWlobm5id2F3bml0eXVrYTZ2M2dhaHAybTJ4dmZsNjNuaHZnazI0ejJjbHBocmM1Z2lheG91AAAAAAA=",
-        "topics": [
-          "b4tyqfTeLQEseP5E5NEohWzeNZM4MoJB6DrRuF8eeFs=",
-          "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAM=",
-          "9WcG/Oy0friqHSnTZ21b/PrE/S+gtU8ZzOVtHP3Nqs8="
-        ]
-      },
       "eth_tx_hash": "33de44359ba200c1f564fc3212cd3d6c3a998cba44c2b64262e9956fd25dcaa2",
       "evm_log_name": "BoxCreated",
       "evm_log_params": [
@@ -578,20 +376,9 @@
         }
       ],
       "round": 17389597,
-      "timestamp": "2026-06-06T15:41:19Z",
-      "tx_hash": "848badbe956a865d53fe24fb190e65135b5f4f9bd9ba63ede103ed5d2e505177",
-      "tx_index": 0,
-      "type": "evm.log"
+      "timestamp": "2026-06-06T15:41:19Z"
     },
     {
-      "body": {
-        "address": "J6DaH8JePQfQe/mqiEzYSviaz1c=",
-        "data": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAGo4Bhk=",
-        "topics": [
-          "tQtJk46RWwqznpmi0IEOGQ1qN3ZH7wbsRbHlS4kpaKY=",
-          "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAM="
-        ]
-      },
       "eth_tx_hash": "33de44359ba200c1f564fc3212cd3d6c3a998cba44c2b64262e9956fd25dcaa2",
       "evm_log_name": "DeadlineChanged",
       "evm_log_params": [
@@ -607,20 +394,9 @@
         }
       ],
       "round": 17389597,
-      "timestamp": "2026-06-06T15:41:19Z",
-      "tx_hash": "848badbe956a865d53fe24fb190e65135b5f4f9bd9ba63ede103ed5d2e505177",
-      "tx_index": 0,
-      "type": "evm.log"
+      "timestamp": "2026-06-06T15:41:19Z"
     },
     {
-      "body": {
-        "address": "J6DaH8JePQfQe/mqiEzYSviaz1c=",
-        "data": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAANjXJrcXeoAAA=",
-        "topics": [
-          "iqT6UmSKbRXtzooXnHkshvNxnQzDxXLPkPkZSPDyy2g=",
-          "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAM="
-        ]
-      },
       "eth_tx_hash": "33de44359ba200c1f564fc3212cd3d6c3a998cba44c2b64262e9956fd25dcaa2",
       "evm_log_name": "PriceChanged",
       "evm_log_params": [
@@ -636,21 +412,9 @@
         }
       ],
       "round": 17389597,
-      "timestamp": "2026-06-06T15:41:19Z",
-      "tx_hash": "848badbe956a865d53fe24fb190e65135b5f4f9bd9ba63ede103ed5d2e505177",
-      "tx_index": 0,
-      "type": "evm.log"
+      "timestamp": "2026-06-06T15:41:19Z"
     },
     {
-      "body": {
-        "address": "J6DaH8JePQfQe/mqiEzYSviaz1c=",
-        "data": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAO2JhZmtyZWlmdTc2NHAyMm52dnplMnp4bmZnbWR2aW5xcmwydGx0bnAzc2R4ZTY2cDVqdnIyZ3AybDdxAAAAAAA=",
-        "topics": [
-          "b4tyqfTeLQEseP5E5NEohWzeNZM4MoJB6DrRuF8eeFs=",
-          "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAI=",
-          "9WcG/Oy0friqHSnTZ21b/PrE/S+gtU8ZzOVtHP3Nqs8="
-        ]
-      },
       "eth_tx_hash": "9761275751738e17d21b54d40f1d97bd66620da3908ddc61ce446b6cc00b7b87",
       "evm_log_name": "BoxCreated",
       "evm_log_params": [
@@ -671,20 +435,9 @@
         }
       ],
       "round": 17389593,
-      "timestamp": "2026-06-06T15:40:57Z",
-      "tx_hash": "a75117c06b9f262c1c01a38932a4d4fcf100f9df3579c9ae88dc88dde666f319",
-      "tx_index": 0,
-      "type": "evm.log"
+      "timestamp": "2026-06-06T15:40:57Z"
     },
     {
-      "body": {
-        "address": "J6DaH8JePQfQe/mqiEzYSviaz1c=",
-        "data": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAGo4BgM=",
-        "topics": [
-          "tQtJk46RWwqznpmi0IEOGQ1qN3ZH7wbsRbHlS4kpaKY=",
-          "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAI="
-        ]
-      },
       "eth_tx_hash": "9761275751738e17d21b54d40f1d97bd66620da3908ddc61ce446b6cc00b7b87",
       "evm_log_name": "DeadlineChanged",
       "evm_log_params": [
@@ -700,20 +453,9 @@
         }
       ],
       "round": 17389593,
-      "timestamp": "2026-06-06T15:40:57Z",
-      "tx_hash": "a75117c06b9f262c1c01a38932a4d4fcf100f9df3579c9ae88dc88dde666f319",
-      "tx_index": 0,
-      "type": "evm.log"
+      "timestamp": "2026-06-06T15:40:57Z"
     },
     {
-      "body": {
-        "address": "J6DaH8JePQfQe/mqiEzYSviaz1c=",
-        "data": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAK1468WsYgAAA=",
-        "topics": [
-          "iqT6UmSKbRXtzooXnHkshvNxnQzDxXLPkPkZSPDyy2g=",
-          "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAI="
-        ]
-      },
       "eth_tx_hash": "9761275751738e17d21b54d40f1d97bd66620da3908ddc61ce446b6cc00b7b87",
       "evm_log_name": "PriceChanged",
       "evm_log_params": [
@@ -729,20 +471,9 @@
         }
       ],
       "round": 17389593,
-      "timestamp": "2026-06-06T15:40:57Z",
-      "tx_hash": "a75117c06b9f262c1c01a38932a4d4fcf100f9df3579c9ae88dc88dde666f319",
-      "tx_index": 0,
-      "type": "evm.log"
+      "timestamp": "2026-06-06T15:40:57Z"
     },
     {
-      "body": {
-        "address": "J6DaH8JePQfQe/mqiEzYSviaz1c=",
-        "data": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY=",
-        "topics": [
-          "9dqCsWSfPhv1Y7rxrtcFdcr5vaUkFAKa/JI7vOKOmd0=",
-          "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAE="
-        ]
-      },
       "eth_tx_hash": "1237bfb6261ca28d2f0a6159565468ef7aa14fb21dd012b761fe544f3e6ca87e",
       "evm_log_name": "BoxStatusChanged",
       "evm_log_params": [
@@ -758,21 +489,9 @@
         }
       ],
       "round": 17389589,
-      "timestamp": "2026-06-06T15:40:34Z",
-      "tx_hash": "d49c3a186c4966e6aa73594464034e9afaad6799a68180f7367dec4ed552837d",
-      "tx_index": 0,
-      "type": "evm.log"
+      "timestamp": "2026-06-06T15:40:34Z"
     },
     {
-      "body": {
-        "address": "J6DaH8JePQfQe/mqiEzYSviaz1c=",
-        "data": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAO2JhZmtyZWlieXU2bXg1YWpoc3d3YzRnaTdrcG15ZmVyaGVycnA2NHAycHBmbjQ0b2F0enJlc3l5dXI0AAAAAAA=",
-        "topics": [
-          "b4tyqfTeLQEseP5E5NEohWzeNZM4MoJB6DrRuF8eeFs=",
-          "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAE=",
-          "9WcG/Oy0friqHSnTZ21b/PrE/S+gtU8ZzOVtHP3Nqs8="
-        ]
-      },
       "eth_tx_hash": "1237bfb6261ca28d2f0a6159565468ef7aa14fb21dd012b761fe544f3e6ca87e",
       "evm_log_name": "BoxCreated",
       "evm_log_params": [
@@ -793,21 +512,9 @@
         }
       ],
       "round": 17389589,
-      "timestamp": "2026-06-06T15:40:34Z",
-      "tx_hash": "d49c3a186c4966e6aa73594464034e9afaad6799a68180f7367dec4ed552837d",
-      "tx_index": 0,
-      "type": "evm.log"
+      "timestamp": "2026-06-06T15:40:34Z"
     },
     {
-      "body": {
-        "address": "J6DaH8JePQfQe/mqiEzYSviaz1c=",
-        "data": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAO2JhZmtyZWliYmxwemRkaGFmcW1oejJjcmpzMnJtZXluMmtmZ2V2b29taW9kY2RqajRpZWRpa3BiajZtAAAAAAA=",
-        "topics": [
-          "b4tyqfTeLQEseP5E5NEohWzeNZM4MoJB6DrRuF8eeFs=",
-          "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=",
-          "9WcG/Oy0friqHSnTZ21b/PrE/S+gtU8ZzOVtHP3Nqs8="
-        ]
-      },
       "eth_tx_hash": "7650a564dc09954b2dddff1de05abe4cc08319129783c9ff567035dc69f3df65",
       "evm_log_name": "BoxCreated",
       "evm_log_params": [
@@ -828,20 +535,9 @@
         }
       ],
       "round": 17389584,
-      "timestamp": "2026-06-06T15:40:05Z",
-      "tx_hash": "280fd3752463fa3e4a3322bff01111c309bffbd4b657f6e7d8842cd54952df44",
-      "tx_index": 0,
-      "type": "evm.log"
+      "timestamp": "2026-06-06T15:40:05Z"
     },
     {
-      "body": {
-        "address": "J6DaH8JePQfQe/mqiEzYSviaz1c=",
-        "data": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAGo4BdA=",
-        "topics": [
-          "tQtJk46RWwqznpmi0IEOGQ1qN3ZH7wbsRbHlS4kpaKY=",
-          "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="
-        ]
-      },
       "eth_tx_hash": "7650a564dc09954b2dddff1de05abe4cc08319129783c9ff567035dc69f3df65",
       "evm_log_name": "DeadlineChanged",
       "evm_log_params": [
@@ -857,20 +553,9 @@
         }
       ],
       "round": 17389584,
-      "timestamp": "2026-06-06T15:40:05Z",
-      "tx_hash": "280fd3752463fa3e4a3322bff01111c309bffbd4b657f6e7d8842cd54952df44",
-      "tx_index": 0,
-      "type": "evm.log"
+      "timestamp": "2026-06-06T15:40:05Z"
     },
     {
-      "body": {
-        "address": "J6DaH8JePQfQe/mqiEzYSviaz1c=",
-        "data": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAFa8deLWMQAAA=",
-        "topics": [
-          "iqT6UmSKbRXtzooXnHkshvNxnQzDxXLPkPkZSPDyy2g=",
-          "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="
-        ]
-      },
       "eth_tx_hash": "7650a564dc09954b2dddff1de05abe4cc08319129783c9ff567035dc69f3df65",
       "evm_log_name": "PriceChanged",
       "evm_log_params": [
@@ -886,10 +571,7 @@
         }
       ],
       "round": 17389584,
-      "timestamp": "2026-06-06T15:40:05Z",
-      "tx_hash": "280fd3752463fa3e4a3322bff01111c309bffbd4b657f6e7d8842cd54952df44",
-      "tx_index": 0,
-      "type": "evm.log"
+      "timestamp": "2026-06-06T15:40:05Z"
     }
   ]
 }
