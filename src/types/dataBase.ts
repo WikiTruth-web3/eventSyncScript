@@ -14,141 +14,6 @@
 export interface Database {
     public: {
         Tables: {
-            boxes: {
-                Row: {
-                    network: 'testnet' | 'mainnet';
-                    layer: 'sapphire';
-                    id: string;
-                    token_id: string;
-                    token_uri: string | null;
-                    box_info_cid: string | null;
-                    private_key: string | null;
-                    price: string;
-                    deadline: string;
-                    minter_id: string;
-                    owner_address: string;
-                    publisher_id: string | null;
-                    seller_id: string | null;
-                    buyer_id: string | null;
-                    completer_id: string | null;
-                    status: number;
-                    listed_mode: number | null;
-                    accepted_token: string | null;
-                    refund_permit: boolean | null;
-                    create_timestamp: string;
-                    publish_timestamp: string | null;
-                    listed_timestamp: string | null;
-                    purchase_timestamp: string | null;
-                    complete_timestamp: string | null;
-                    request_refund_deadline: string | null;
-                    review_deadline: string | null;
-                };
-                Insert: {
-                    network: 'testnet' | 'mainnet';
-                    layer?: 'sapphire';
-                    id: string;
-                    token_id: string;
-                    token_uri?: string | null;
-                    box_info_cid: string | null;
-                    private_key?: string | null;
-                    price?: string;
-                    deadline?: string;
-                    minter_id: string;
-                    owner_address: string;
-                    publisher_id?: string | null;
-                    seller_id?: string | null;
-                    buyer_id?: string | null;
-                    completer_id?: string | null;
-                    status: number;
-                    listed_mode?: number | null;
-                    accepted_token?: string | null;
-                    refund_permit?: boolean | null;
-                    create_timestamp: string;
-                    publish_timestamp?: string | null;
-                    listed_timestamp?: string | null;
-                    purchase_timestamp?: string | null;
-                    complete_timestamp?: string | null;
-                    request_refund_deadline?: string | null;
-                    review_deadline?: string | null;
-                };
-                Update: {
-                    network?: 'testnet' | 'mainnet';
-                    layer?: 'sapphire';
-                    id?: string;
-                    token_id?: string;
-                    token_uri?: string | null;
-                    box_info_cid?: string | null;
-                    private_key?: string | null;
-                    price?: string;
-                    deadline?: string;
-                    minter_id?: string;
-                    owner_address?: string;
-                    publisher_id?: string | null;
-                    seller_id?: string | null;
-                    buyer_id?: string | null;
-                    completer_id?: string | null;
-                    status?: number;
-                    listed_mode?: number | null;
-                    accepted_token?: string | null;
-                    refund_permit?: boolean | null;
-                    create_timestamp?: string;
-                    publish_timestamp?: string | null;
-                    listed_timestamp?: string | null;
-                    purchase_timestamp?: string | null;
-                    complete_timestamp?: string | null;
-                    request_refund_deadline?: string | null;
-                    review_deadline?: string | null;
-                };
-            };
-            metadata_boxes: {
-                Row: {
-                    network: 'testnet' | 'mainnet';
-                    layer: 'sapphire';
-                    id: string;
-                    type_of_crime: string | null;
-                    label: string[] | null;
-                    title: string | null;
-                    nft_image: string | null;
-                    box_image: string | null;
-                    country: string | null;
-                    state: string | null;
-                    description: string | null;
-                    event_date: string | null;
-                    create_date: string | null;
-                    timestamp: number | null;
-                    mint_method: string | null;
-                    file_list: string[] | null;
-                    password: string | null;
-                    encryption_slices_metadata_cid: Record<string, unknown> | null;
-                    encryption_file_cid: Record<string, unknown>[] | null;
-                    encryption_passwords: Record<string, unknown> | null;
-                    public_key: string | null;
-                };
-                Insert: {
-                    network: 'testnet' | 'mainnet';
-                    layer?: 'sapphire';
-                    id: string; // boxId (BIGINT)
-                    type_of_crime: string | null;
-                    label: string[] | null;
-                    title: string | null;
-                    nft_image: string | null;
-                    box_image: string | null;
-                    country: string | null;
-                    state: string | null;
-                    description: string | null;
-                    event_date: string | null;
-                    create_date: string | null;
-                    timestamp: number | null;
-                    mint_method: string | null;
-                    file_list: string[] | null;
-                    password?: string | null;
-                    encryption_slices_metadata_cid?: Record<string, unknown> | null;
-                    encryption_file_cid?: Record<string, unknown>[] | null;
-                    encryption_passwords?: Record<string, unknown> | null;
-                    public_key?: string | null;
-                };
-                Update: never; // Do not allow subsequent updates
-            };
             users: {
                 Row: {
                     network: 'testnet' | 'mainnet';
@@ -183,6 +48,86 @@ export interface Database {
                     is_blacklisted?: boolean;
                 };
             };
+            boxes: {
+                Row: {
+                    network: 'testnet' | 'mainnet';
+                    layer: 'sapphire';
+                    id: string;
+                    token_id: string;
+                    box_info_cid: string | null;
+                    private_key: string | null;
+                    price: string;
+                    deadline: string;
+                    minter_id: string;
+                    publisher_id: string | null;
+                    seller_id: string | null;
+                    buyer_id: string | null;
+                    completer_id: string | null;
+                    status: number;
+                    listed_mode: number | null;
+                    accepted_token: string | null;
+                    refund_permit: boolean | null;
+                    create_timestamp: string;
+                    publish_timestamp: string | null;
+                    listed_timestamp: string | null;
+                    purchase_timestamp: string | null;
+                    complete_timestamp: string | null;
+                    request_refund_deadline: string | null;
+                    arbitration_deadline: string | null;
+                };
+                Insert: {
+                    network: 'testnet' | 'mainnet';
+                    layer?: 'sapphire';
+                    id: string;
+                    token_id: string;
+                    box_info_cid: string | null;
+                    private_key?: string | null;
+                    price?: string;
+                    deadline?: string;
+                    minter_id: string;
+                    publisher_id?: string | null;
+                    seller_id?: string | null;
+                    buyer_id?: string | null;
+                    completer_id?: string | null;
+                    status: number;
+                    listed_mode?: number | null;
+                    accepted_token?: string | null;
+                    refund_permit?: boolean | null;
+                    create_timestamp: string;
+                    publish_timestamp?: string | null;
+                    listed_timestamp?: string | null;
+                    purchase_timestamp?: string | null;
+                    complete_timestamp?: string | null;
+                    request_refund_deadline?: string | null;
+                    arbitration_deadline?: string | null;
+                };
+                Update: {
+                    network?: 'testnet' | 'mainnet';
+                    layer?: 'sapphire';
+                    id?: string;
+                    token_id?: string;
+                    box_info_cid?: string | null;
+                    private_key?: string | null;
+                    price?: string;
+                    deadline?: string;
+                    minter_id?: string;
+                    publisher_id?: string | null;
+                    seller_id?: string | null;
+                    buyer_id?: string | null;
+                    completer_id?: string | null;
+                    status?: number;
+                    listed_mode?: number | null;
+                    accepted_token?: string | null;
+                    refund_permit?: boolean | null;
+                    create_timestamp?: string;
+                    publish_timestamp?: string | null;
+                    listed_timestamp?: string | null;
+                    purchase_timestamp?: string | null;
+                    complete_timestamp?: string | null;
+                    request_refund_deadline?: string | null;
+                    arbitration_deadline?: string | null;
+                };
+            };
             box_bidders: {
                 Row: {
                     network: 'testnet' | 'mainnet';
@@ -200,149 +145,60 @@ export interface Database {
                 };
                 Update: never; // Do not allow subsequent updates
             };
-            payments: {
+            metadata_boxes: {
                 Row: {
                     network: 'testnet' | 'mainnet';
                     layer: 'sapphire';
                     id: string;
-                    box_id: string;
-                    user_id: string;
-                    token: string;
-                    amount: string;
-                    timestamp: string;
-                    transaction_hash: Uint8Array;
-                    block_number: string;
+                    type_of_crime: string | null;
+                    label: string[] | null;
+                    title: string | null;
+                    nft_image: string | null;
+                    box_image: string | null;
+                    nft_image_kv: string | null;
+                    box_image_kv: string | null;
+                    country: string | null;
+                    state: string | null;
+                    description: string | null;
+                    event_date: string | null;
+                    create_date: string | null;
+                    timestamp: number | null;
+                    mint_method: string | null;
+                    file_list: string[] | null;
+                    password: string | null;
+                    encryption_slices_metadata_cid: Record<string, unknown> | null;
+                    encryption_file_cid: Record<string, unknown>[] | null;
+                    encryption_passwords: Record<string, unknown> | null;
+                    public_key: string | null;
                 };
                 Insert: {
                     network: 'testnet' | 'mainnet';
                     layer?: 'sapphire';
-                    id: string;
-                    box_id: string;
-                    user_id: string;
-                    token: string;
-                    amount: string;
-                    timestamp: string;
-                    transaction_hash: Uint8Array;
-                    block_number: string;
+                    id: string; // boxId (BIGINT)
+                    type_of_crime: string | null;
+                    label: string[] | null;
+                    title: string | null;
+                    nft_image: string | null;
+                    box_image: string | null;
+                    nft_image_kv: string | null;
+                    box_image_kv: string | null;
+                    country: string | null;
+                    state: string | null;
+                    description: string | null;
+                    event_date: string | null;
+                    create_date: string | null;
+                    timestamp: number | null;
+                    mint_method: string | null;
+                    file_list: string[] | null;
+                    password?: string | null;
+                    encryption_slices_metadata_cid?: Record<string, unknown> | null;
+                    encryption_file_cid?: Record<string, unknown>[] | null;
+                    encryption_passwords?: Record<string, unknown> | null;
+                    public_key?: string | null;
                 };
                 Update: never; // Do not allow subsequent updates
             };
-            withdraws: {
-                Row: {
-                    network: 'testnet' | 'mainnet';
-                    layer: 'sapphire';
-                    id: string;
-                    token: string;
-                    box_list: string[];
-                    user_id: string;
-                    amount: string;
-                    timestamp: string;
-                    withdraw_type: 'Order' | 'Refund' | 'Reward';
-                    transaction_hash: Uint8Array;
-                    block_number: string;
-                };
-                Insert: {
-                    network: 'testnet' | 'mainnet';
-                    layer?: 'sapphire';
-                    id: string;
-                    token: string;
-                    box_list: string[];
-                    user_id: string;
-                    amount: string;
-                    timestamp: string;
-                    withdraw_type: 'Order' | 'Refund' | 'Reward';
-                    transaction_hash: Uint8Array;
-                    block_number: string;
-                };
-                Update: never; // Do not allow subsequent updates
-            };
-            rewards_addeds: {
-                Row: {
-                    network: 'testnet' | 'mainnet';
-                    layer: 'sapphire';
-                    id: string;
-                    box_id: string;
-                    token: string;
-                    amount: string;
-                    reward_type: 'Minter' | 'Seller' | 'Completer' | 'Total';
-                    timestamp: string;
-                    transaction_hash: Uint8Array;
-                    block_number: string;
-                };
-                Insert: {
-                    network: 'testnet' | 'mainnet';
-                    layer?: 'sapphire';
-                    id: string;
-                    box_id: string;
-                    token: string;
-                    amount: string;
-                    reward_type: 'Minter' | 'Seller' | 'Completer' | 'Total';
-                    timestamp: string;
-                    transaction_hash: Uint8Array;
-                    block_number: string;
-                };
-                Update: never; // Do not allow subsequent updates
-            };
-            box_rewards: {
-                Row: {
-                    network: 'testnet' | 'mainnet';
-                    layer: 'sapphire';
-                    id: string;
-                    box_id: string;
-                    reward_type: 'Minter' | 'Seller' | 'Completer' | 'Total';
-                    token: string;
-                    amount: string;
-                };
-                // ⚠️ Do not allow manual insertion: This table is managed by triggers
-                // If you need to add rewards, you should insert into rewards_addeds table
-                Insert: never;
-                Update: never;
-            };
-            user_rewards: {
-                Row: {
-                    network: 'testnet' | 'mainnet';
-                    layer: 'sapphire';
-                    id: string;
-                    user_id: string;
-                    reward_type: 'Minter' | 'Seller' | 'Completer';
-                    token: string;
-                    amount: string;
-                };
-                // ⚠️ Do not allow manual insertion: This table is managed by triggers
-                // user_rewards does not include Total type, only records rewards assigned to specific roles
-                Insert: never;
-                Update: never;
-            };
-            user_withdraws: {
-                Row: {
-                    network: 'testnet' | 'mainnet';
-                    layer: 'sapphire';
-                    id: string;
-                    user_id: string;
-                    withdraw_type: 'Reward';
-                    token: string;
-                    amount: string;
-                };
-                // ⚠️ Do not allow manual insertion: This table is managed by triggers
-                Insert: never;
-                Update: never;
-            };
-            
-            box_user_order_amounts: {
-                Row: {
-                    network: 'testnet' | 'mainnet';
-                    layer: 'sapphire';
-                    id: string;
-                    user_id: string;
-                    box_id: string;
-                    token: string;
-                    amount: string;
-                };
-                // ⚠️ Do not allow manual insertion: This table is managed by triggers
-                // Financial changes should be triggered by payments, withdraws and rewards_addeds tables
-                Insert: never;
-                Update: never;
-            };
+
             statistical_state: {
                 Row: {
                     network: 'testnet' | 'mainnet';
@@ -377,6 +233,142 @@ export interface Database {
                     id?: string;
                 };
             };
+            payments: {
+                Row: {
+                    network: 'testnet' | 'mainnet';
+                    layer: 'sapphire';
+                    id: string;
+                    box_id: string;
+                    user_id: string;
+                    pay_type:'OrderAmount'|'DelayFee';
+                    token: string;
+                    amount: string;
+                    timestamp: string;
+                    transaction_hash: string;
+                };
+                Insert: {
+                    network: 'testnet' | 'mainnet';
+                    layer?: 'sapphire';
+                    id: string;
+                    box_id: string;
+                    user_id: string;
+                    pay_type:'OrderAmount'|'DelayFee';
+                    token: string;
+                    amount: string;
+                    timestamp: string;
+                    transaction_hash: string;
+                };
+                Update: never; // Do not allow subsequent updates
+            };
+            order_refund_withdraws: {
+                Row: {
+                    network: 'testnet' | 'mainnet';
+                    layer: 'sapphire';
+                    id: string;
+                    token: string;
+                    box_id_list: string[];
+                    user_id: string;
+                    amount: string;
+                    timestamp: string;
+                    withdraw_type: 'Order' | 'Refund';
+                    transaction_hash: string;
+                };
+                Insert: {
+                    network: 'testnet' | 'mainnet';
+                    layer?: 'sapphire';
+                    id: string;
+                    token: string;
+                    box_id_list: string[];
+                    user_id: string;
+                    amount: string;
+                    timestamp: string;
+                    withdraw_type: 'Order' | 'Refund';
+                    transaction_hash: string;
+                };
+                Update: never; // Do not allow subsequent updates
+            };
+            box_user_order_amounts: {
+                Row: {
+                    network: 'testnet' | 'mainnet';
+                    layer: 'sapphire';
+                    id: string;
+                    user_id: string;
+                    box_id: string;
+                    token: string;
+                    currentAmount: string;
+                };
+                // ⚠️ Do not allow manual insertion: This table is managed by triggers
+                // Financial changes should be triggered by payments, withdraws and rewards_addeds tables
+                Insert: never;
+                Update: never;
+            };
+            rewards_addeds: {
+                Row: {
+                    network: 'testnet' | 'mainnet';
+                    layer: 'sapphire';
+                    id: string;
+                    box_id: string;
+                    token: string;
+                    amount: string;
+                    timestamp: string;
+                    transaction_hash: string;
+                };
+                Insert: {
+                    network: 'testnet' | 'mainnet';
+                    layer?: 'sapphire';
+                    id: string;
+                    box_id: string;
+                    token: string;
+                    amount: string;
+                    timestamp: string;
+                    transaction_hash: string;
+                };
+                Update: never; // Do not allow subsequent updates
+            };
+            box_rewards: {
+                Row: {
+                    network: 'testnet' | 'mainnet';
+                    layer: 'sapphire';
+                    id: string;
+                    box_id: string;
+                    user_id: string;
+                    token: string;
+                    totalAmount: string;
+                };
+                // ⚠️ Do not allow manual insertion: This table is managed by triggers
+                // If you need to add rewards, you should insert into rewards_addeds table
+                Insert: never;
+                Update: never;
+            };
+            rewards_withdraws: {
+                Row: {
+                    network: 'testnet' | 'mainnet';
+                    layer: 'sapphire';
+                    id: string;
+                    user_id: string;
+                    token: string;
+                    amount: string;
+                };
+                // ⚠️ Do not allow manual insertion: This table is managed by triggers
+                Insert: never;
+                Update: never;
+            };
+            user_rewards: {
+                Row: {
+                    network: 'testnet' | 'mainnet';
+                    layer: 'sapphire';
+                    id: string;
+                    user_id: string;
+                    token: string;
+                    currentAmount: string;
+                    totalAmount: string;
+                };
+                // ⚠️ Do not allow manual insertion: This table is managed by triggers
+                // user_rewards does not include Total type, only records rewards assigned to specific roles
+                Insert: never;
+                Update: never;
+            };
+
             fund_manager_state: {
                 Row: {
                     network: 'testnet' | 'mainnet';
@@ -416,9 +408,9 @@ export interface Database {
                     network: 'testnet' | 'mainnet';
                     layer: 'sapphire';
                     id: string;
+                    funds_type: 'PaymentOrder'| 'PaymentDelayFee' | 'OrderWithdraw' | 'RefundWithdraw' | 'RewardsAdded' | 'RewardsWithdraw';
                     token: string;
                     fund_manager_id: string;
-                    funds_type: 'OrderPaid' | 'OrderWithdraw' | 'RefundWithdraw' | 'RewardsAdded' | 'RewardsWithdraw';
                     amount: string;
                 };
                 // ⚠️ Do not allow manual insertion: This table is managed by triggers

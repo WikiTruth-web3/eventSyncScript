@@ -45,7 +45,6 @@ export const handlePayment = async (
     const timestamp = extractTimestamp(event)
     const recordId = generateRecordId(event)
     const txHash = normalizeHash(event.raw.tx_hash ?? event.raw.eth_tx_hash)
-    const blockNumber = event.raw.round ?? 0
 
     if (!txHash) return
 
@@ -59,7 +58,6 @@ export const handlePayment = async (
         amount: amount,
         timestamp: timestamp,
         transaction_hash: hashToBytea(txHash),
-        block_number: String(blockNumber),
     }) as Database['public']['Tables']['payments']['Insert']
 
     const { error } = await db
@@ -101,7 +99,6 @@ export const handleOrderAmountWithdraw = async (
     const timestamp = extractTimestamp(event)
     const recordId = generateRecordId(event)
     const txHash = normalizeHash(event.raw.tx_hash ?? event.raw.eth_tx_hash)
-    const blockNumber = event.raw.round ?? 0
 
     if (!txHash) return
 
@@ -110,16 +107,15 @@ export const handleOrderAmountWithdraw = async (
         layer: scope.layer as 'sapphire',
         id: recordId,
         token: token.toLowerCase(),
-        box_list: boxList,
+        box_id_list: boxList,
         user_id: userId,
         amount: amount,
         timestamp: timestamp,
         transaction_hash: hashToBytea(txHash),
-        block_number: String(blockNumber),
-    }) as Database['public']['Tables']['withdraws']['Insert']
+    }) as Database['public']['Tables']['order_refund_withdraws']['Insert']
 
     const { error } = await db
-        .from('withdraws')
+        .from('order_refund_withdraws')
         .upsert(withdrawData, {
             onConflict: 'network,layer,id'
         })
@@ -153,7 +149,6 @@ export const handleRefundAmountWithdraw = async (
     const timestamp = extractTimestamp(event)
     const recordId = generateRecordId(event)
     const txHash = normalizeHash(event.raw.tx_hash ?? event.raw.eth_tx_hash)
-    const blockNumber = event.raw.round ?? 0
 
     if (!txHash) return
 
@@ -162,16 +157,15 @@ export const handleRefundAmountWithdraw = async (
         layer: scope.layer as 'sapphire',
         id: recordId,
         token: token.toLowerCase(),
-        box_list: boxList,
+        box_id_list: boxList,
         user_id: userId,
         amount: amount,
         timestamp: timestamp,
         transaction_hash: hashToBytea(txHash),
-        block_number: String(blockNumber),
-    }) as Database['public']['Tables']['withdraws']['Insert']
+    }) as Database['public']['Tables']['order_refund_withdraws']['Insert']
 
     const { error } = await db
-        .from('withdraws')
+        .from('order_refund_withdraws')
         .upsert(withdrawData, {
             onConflict: 'network,layer,id'
         })
@@ -200,23 +194,10 @@ export const handleRewardAdded = async (
 
     const rewardTypeNum = typeof rewardTypeRaw === 'bigint' ? Number(rewardTypeRaw) : Number(rewardTypeRaw)
     console.log ('reward_uint8:',rewardTypeNum)
-    const rewardTypeMap: Record<number, 'Minter' | 'Seller' | 'Completer' | 'Total'> = {
-        0: 'Minter',
-        1: 'Seller',
-        2: 'Completer',
-        3: 'Total',
-    }
-    let rewardType
-    if (rewardTypeNum === 0) {
-        rewardType = 'Minter'
-    } else {
-        rewardType = rewardTypeMap[rewardTypeNum] || 'Total'
-    }
 
     const timestamp = extractTimestamp(event)
     const recordId = generateRecordId(event)
     const txHash = normalizeHash(event.raw.tx_hash ?? event.raw.eth_tx_hash)
-    const blockNumber = event.raw.round ?? 0
 
     if (!txHash) return
 
@@ -227,10 +208,8 @@ export const handleRewardAdded = async (
         box_id: boxId,
         token: token.toLowerCase(),
         amount: amount,
-        reward_type: rewardType,
         timestamp: timestamp,
         transaction_hash: hashToBytea(txHash),
-        block_number: String(blockNumber),
     }) as Database['public']['Tables']['rewards_addeds']['Insert']
 
     const { error } = await db
@@ -240,10 +219,10 @@ export const handleRewardAdded = async (
         })
 
     if (error) {
-        console.error(`❌ Failed to insert reward for box ${boxId} (${rewardType}):`, error.message)
+        console.error(`❌ Failed to insert reward for box ${boxId} :`, error.message)
         console.error(`   Error info:`, JSON.stringify(error, null, 2))
     } else {
-        console.log(`✅ Inserted reward for box ${boxId} (${rewardType})`)
+        console.log(`✅ Inserted reward for box ${boxId} `)
     }
 }
 
@@ -265,7 +244,6 @@ export const handleRewardsWithdraw = async (
     const timestamp = extractTimestamp(event)
     const recordId = generateRecordId(event)
     const txHash = normalizeHash(event.raw.tx_hash ?? event.raw.eth_tx_hash)
-    const blockNumber = event.raw.round ?? 0
 
     if (!txHash) return
 
@@ -274,17 +252,15 @@ export const handleRewardsWithdraw = async (
         layer: scope.layer as 'sapphire',
         id: recordId,
         token: token.toLowerCase(),
-        box_list: [], 
+        box_id_list: [], 
         user_id: userId,
         amount: amount,
         timestamp: timestamp,
-        withdraw_type: 'Reward',
         transaction_hash: hashToBytea(txHash),
-        block_number: String(blockNumber),
-    }) as Database['public']['Tables']['withdraws']['Insert']
+    }) as Database['public']['Tables']['rewards_withdraws']['Insert']
 
     const { error } = await db
-        .from('withdraws')
+        .from('rewards_withdraws')
         .upsert(withdrawData, {
             onConflict: 'network,layer,id'
         })

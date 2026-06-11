@@ -44,7 +44,6 @@ export const handleBoxCreated = async (
         id: boxId,
         token_id: boxId, // PostgreSQL BIGINT can accept string-formatted numbers
         minter_id: userId,
-        owner_address: '0x0000000000000000000000000000000000000000', // Default value, will be updated via Transfer event
         status: 0, // 0=Storing, 1=Selling, 2=Auctioning, 3=Paid, 4=Refunding, 5=Delaying, 6=Published, 7=Blacklisted
         listed_mode: null, // NULL=Not Listed, 1=Selling, 2=Auctioning
         price: '0',

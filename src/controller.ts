@@ -19,7 +19,7 @@ export interface CommonType {
 
 const COMMON_CONSTANT = {
     writeToSupabase: true,
-    restart: true,
+    restart: false,
     isUpdateLastBlock: true,
 }
 
