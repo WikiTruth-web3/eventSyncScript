@@ -1,8 +1,8 @@
-# WikiTruth Event Sync — 项目上下文
+# Evidence Market Event Sync — 项目上下文
 
 ## 项目定位
 
-区块链事件同步脚本，从 **Oasis Sapphire** 链（testnet `23295` / mainnet `23294`）拉取 WikiTruth 协议合约事件，解码后写入 **Supabase** 数据库，并可选从 **IPFS** 获取元数据。
+区块链事件同步脚本，从 **Oasis Sapphire** 链（testnet `23295` / mainnet `23294`）拉取 Evidence Market 协议合约事件，解码后写入 **Supabase** 数据库，并可选从 **IPFS** 获取元数据。
 
 ## 技术栈
 
@@ -129,12 +129,8 @@ BlindBox/Exchange/FundManager 使用代理模式，事件非标准，无法被 O
 ### IPFS 文件下载（`dev-tools/downloadIpfsFile.ts`）
 独立 CLI 工具，通过合约事件中的 `boxInfoCID` 从 IPFS 网关下载元数据文件到本地，支持多网关自动降级（Pinata、ipfs.io、Cloudflare、dweb.link 等）。
 
-### 解码验证工具（`dev-tools/checkDecode.ts` / `decodeEventsExample.ts`）
-用于本地测试事件解码逻辑是否正确，验证 ABI 签名匹配和参数提取是否符合预期。
-
 ## 特殊处理
 
-- **错误事件修正**：早期合约 bug 导致部分事件参数错误，在 `utils/fixEventsErrorParam.ts` 中手动更正
 - **Nexus 倒序**：Oasis Nexus 返回事件按 blockNumber 倒序，需翻转后再写入
 - **BigInt 序列化**：所有 BigInt 在写入 Supabase 前转为字符串
 
