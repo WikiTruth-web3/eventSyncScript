@@ -1,20 +1,10 @@
 {
-  "fetchedAt": "2026-06-11T15:57:13.660Z",
+  "fetchedAt": "2026-06-12T03:19:17.343Z",
   "scope": {
     "network": "testnet",
     "layer": "sapphire"
   },
   "contract": "EXCHANGE",
-  "cursorBefore": {
-    "lastBlock": 17389000,
-    "lastTimestamp": "2026-06-11 02:57:29"
-  },
-  "cursorAfter": {
-    "lastBlock": 17389000,
-    "lastTimestamp": "2026-06-11 02:57:29"
-  },
-  "pagesFetched": 0,
-  "totalFetched": 0,
   "eventCount": 0,
-  "rawEvents": []
+  "events": []
 }

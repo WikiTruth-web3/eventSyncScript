@@ -1,10 +1,11 @@
 // src/services/supabase/truthNFTWriter.ts
 import type { RuntimeScope } from '../../oasisQuery/types/searchScope'
 import { db } from '../../config/db.client'
-import { sanitizeForDb } from '../../utils/getEventArgs'
+import { sanitizeForDb } from '../../utils/bigInt'
 import { Database } from '../../types/dataBase'
-import { getEventArgAsString } from '../../utils/getEventArgs'
-import type { DecodedRuntimeEvent } from '../../oasisQuery/app/services/events'
+import { getEventArgAsString } from '../../utils/getContractsEventArgs'
+import type { RuntimeEvent } from '../../oasisQuery/oasis-nexus/api'
+
 
 /**
  * Create or update user address record
@@ -35,7 +36,7 @@ export const ensureUserAddressExists = async (
 
 export const ensureAddressExist = async (
     scope: RuntimeScope,
-    events: DecodedRuntimeEvent<any>[],
+    events: RuntimeEvent[],
     argName: string,
 ) => {
     const addresses = new Set<string>()
@@ -71,3 +72,4 @@ export const ensureAddressExist = async (
         console.log(`✅ Users upserted:`, addresses)
     }
 }
+

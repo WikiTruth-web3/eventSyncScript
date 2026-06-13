@@ -8,36 +8,14 @@ import path from 'node:path'
 import type { RuntimeScope } from '../oasisQuery/types/searchScope'
 import { ContractName } from '../contractsConfig/types'
 import { OUTPUT_CONFIG } from '../config/sync'
-import type { RuntimeContractSyncResult } from '../sync-engine/sync/runtimeContractSyncer'
-
-export interface FilteredEventData {
-    eth_tx_hash?: string
-    evm_log_name?: string
-    evm_log_params?: any[]
-    round: number
-    timestamp: string
-}
+import type { RuntimeEvent } from '../oasisQuery/oasis-nexus/api'
 
 export interface EventDataPayload {
     fetchedAt: string
     scope: RuntimeScope
     contract: ContractName
-    cursorBefore: {
-        lastBlock: number
-        lastLogIndex?: number
-        lastTimestamp?: string
-        lastEventId?: string
-    }
-    cursorAfter: {
-        lastBlock: number
-        lastLogIndex?: number
-        lastTimestamp?: string
-        lastEventId?: string
-    }
-    pagesFetched: number
-    totalFetched: number
     eventCount: number
-    rawEvents: FilteredEventData[]
+    events: RuntimeEvent[]
 }
 
 /**
@@ -55,32 +33,20 @@ const resolveOutputPath = (scope: RuntimeScope, contract: ContractName): string 
  * Build event data payload
  * @param scope - Runtime scope
  * @param contract - Contract name
- * @param syncResult - Sync result
+ * @param events - Decoded native events
  * @returns Event data payload
  */
 const buildEventDataPayload = (
     scope: RuntimeScope,
     contract: ContractName,
-    syncResult: RuntimeContractSyncResult,
+    events: RuntimeEvent[],
 ): EventDataPayload => {
-    const filteredEvents = syncResult.fetchResult.rawEvents.map(event => ({
-        eth_tx_hash: event.eth_tx_hash ?? event.tx_hash,
-        evm_log_name: event.evm_log_name,
-        evm_log_params: event.evm_log_params,
-        round: event.round,
-        timestamp: event.timestamp,
-    }))
-
     return {
         fetchedAt: new Date().toISOString(),
         scope,
         contract,
-        cursorBefore: syncResult.cursorBefore,
-        cursorAfter: syncResult.cursorAfter,
-        pagesFetched: syncResult.fetchResult.pagesFetched,
-        totalFetched: syncResult.fetchResult.totalFetched,
-        eventCount: syncResult.fetchResult.rawEvents.length,
-        rawEvents: filteredEvents,
+        eventCount: events.length,
+        events,
     }
 }
 
@@ -88,16 +54,16 @@ const buildEventDataPayload = (
  * Save event data to JSON file
  * @param scope - Runtime scope
  * @param contract - Contract name
- * @param syncResult - Sync result
+ * @param events - Decoded native events
  * @returns Saved file path, returns null if save fails
  */
 export const saveEventDataToFile = async (
     scope: RuntimeScope,
     contract: ContractName,
-    syncResult: RuntimeContractSyncResult,
+    events: RuntimeEvent[],
 ): Promise<string | null> => {
     try {
-        const payload = buildEventDataPayload(scope, contract, syncResult)
+        const payload = buildEventDataPayload(scope, contract, events)
         const outputPath = resolveOutputPath(scope, contract)
 
         // Ensure directory exists
@@ -106,7 +72,7 @@ export const saveEventDataToFile = async (
         // Write file
         await fs.writeFile(outputPath, JSON.stringify(payload, null, 2), 'utf8')
 
-        console.log(`📝 Saved raw event data to ${outputPath}`)
+        console.log(`📝 Saved decoded event data to ${outputPath}`)
         return outputPath
     } catch (error) {
         console.warn(
@@ -126,4 +92,3 @@ export const shouldSaveEventDataToFile = (): boolean => {
     const envValue = process.env.EVENT_SYNC_SAVE_JSON
     return envValue === 'true' || envValue === '1'
 }
-

@@ -1,12 +1,25 @@
 import { Database } from '../types/dataBase';
 
-// Helper to convert transaction hash byte array to hex string
-const hashToHexString = (hash: any): string => {
-  if (hash instanceof Uint8Array || Array.isArray(hash)) {
-    return '0x' + Array.from(hash).map(b => b.toString(16).padStart(2, '0')).join('');
-  }
-  return String(hash);
-};
+// Map database table names to Cloudflare Worker API operation endpoints
+const tableToOperationMap: Record<keyof Database, string> = {
+  users: 'user',
+  user_addresses: 'user-address',
+  boxes: 'box',
+  box_bidders: 'box-bidder',
+  metadata_boxes: 'metadata',
+  sync_status: 'sync-status',
+  payments: 'payment',
+  rewards_addeds: 'reward-added',
+  order_refund_withdraws: 'order-refund-withdraw',
+  rewards_withdraws: 'rewards-withdraw',
+  box_status_statistical: 'query-stats', // Managed by D1 triggers, no direct upserts
+  fund_manager_state: 'fund-manager-state',
+  forwarder_state: 'forwarder-state',
+  box_user_order_amounts: '', // Managed by D1 triggers
+  box_rewards: '', // Managed by D1 triggers
+  user_rewards: '', // Managed by D1 triggers
+  token_total_amounts: '' // Managed by D1 triggers
+}; 
 
 export class CloudflareClient {
   private workerUrl: string;
@@ -68,23 +81,20 @@ export class CloudflareClient {
    * @param updates - Object containing fields to update
    * @param match - Filter criteria containing network, layer, and id
    */
-  async update<TTable extends keyof Database['public']['Tables']>(
+  async update<TTable extends keyof Database>(
     table: TTable,
-    updates: Database['public']['Tables'][TTable]['Update'],
+    updates: Partial<Database[TTable]>,
     match: { network: string; layer: string; id: string }
   ): Promise<{ error: any }> {
     const layer = match.layer || 'sapphire';
     const network = match.network || 'testnet';
     const id = match.id;
 
-    let operation = '';
-    if (table === 'boxes') {
-      operation = 'update-box';
-    } else if (table === 'user_addresses') {
-      operation = 'update-user-address';
-    } else {
-      operation = `update-${table}`;
-    }
+    const operation = table === 'boxes'
+      ? 'update-box'
+      : table === 'user_addresses'
+      ? 'update-user-address'
+      : `update-${table}`;
 
     const url = `${this.workerUrl}/api/${layer}-${network}/db/${operation}`;
     const payload = { id, updates };
@@ -114,10 +124,10 @@ export class CloudflareClient {
    * @param table - Database table name
    * @param recordInput - Single record or array of records to insert
    */
-  async upsert<TTable extends keyof Database['public']['Tables']>(
+  async upsert<TTable extends keyof Database>(
     table: TTable,
-    recordInput: Database['public']['Tables'][TTable]['Insert'] | Database['public']['Tables'][TTable]['Insert'][],
-    options?: any // Keeping parameters compatible for easy replacement
+    recordInput: Partial<Database[TTable]> | Partial<Database[TTable]>[],
+    options?: any
   ): Promise<{ error: any }> {
     if (Array.isArray(recordInput)) {
       if (recordInput.length === 0) return { error: null };
@@ -136,83 +146,20 @@ export class CloudflareClient {
     const layer = record.layer || 'sapphire';
     const network = record.network || 'testnet';
 
-    let operation = '';
-    let payload = { ...record };
+    const operation = tableToOperationMap[table];
+    if (!operation) {
+      return { error: { message: `Unsupported table upsert: ${table}` } };
+    }
 
-    // Clean layer and network as they are passed via URL path
+    // Prepare payload by removing path variables layer and network
+    const payload = { ...record };
     delete payload.layer;
     delete payload.network;
 
+    // Handle special case where Worker API expects userId instead of id for users
     if (table === 'users') {
-      operation = 'user';
-      payload = { userId: record.id };
-    } else if (table === 'user_addresses') {
-      operation = 'user-address';
-      payload = { id: record.id, is_blacklisted: record.is_blacklisted ? 1 : 0 };
-    } else if (table === 'boxes') {
-      operation = 'box';
-      payload = {
-        ...payload,
-        refund_permit: record.refund_permit ? 1 : 0,
-        price: record.price ? String(record.price) : '0'
-      };
-    } else if (table === 'box_bidders') {
-      operation = 'box-bidder';
-      payload = { id: record.id, box_id: record.box_id, bidder_id: record.bidder_id };
-    } else if (table === 'metadata_boxes') {
-      operation = 'metadata';
-      payload = { ...payload };
-    } else if (table === 'sync_status') {
-      operation = 'sync-status';
-      payload = { contract_name: record.contract_name, last_synced_block: String(record.last_synced_block) };
-    } else if (table === 'payments') {
-      operation = 'payment';
-      payload = {
-        id: record.id,
-        box_id: record.box_id,
-        user_id: record.user_id,
-        pay_type: record.pay_type || 'OrderAmount',
-        token: record.token,
-        amount: record.amount,
-        timestamp: record.timestamp,
-        transaction_hash: hashToHexString(record.transaction_hash)
-      };
-    } else if (table === 'rewards_addeds') {
-      operation = 'reward-added';
-      payload = {
-        id: record.id,
-        box_id: record.box_id,
-        token: record.token,
-        amount: record.amount,
-        timestamp: record.timestamp,
-        transaction_hash: hashToHexString(record.transaction_hash)
-      };
-    } else if (table === 'order_refund_withdraws') {
-      operation = 'withdraw';
-      payload = {
-        id: record.id,
-        token: record.token,
-        box_id_list: record.box_id_list || [],
-        user_id: record.user_id,
-        amount: record.amount,
-        timestamp: record.timestamp,
-        transaction_hash: hashToHexString(record.transaction_hash)
-      };
-    } else if (table === 'rewards_withdraws') {
-      operation = 'rewards-withdraw';
-      payload = {
-        id: record.id,
-        user_id: record.user_id,
-        token: record.token,
-        amount: record.amount,
-        timestamp: record.timestamp,
-        transaction_hash: hashToHexString(record.transaction_hash)
-      };
-    } else if (table === 'fund_manager_state') {
-      // Stub endpoint logic or ignored endpoints
-      return { error: null };
-    } else {
-      return { error: { message: `Unsupported table upsert: ${table}` } };
+      payload.userId = record.id;
+      delete payload.id;
     }
 
     const url = `${this.workerUrl}/api/${layer}-${network}/db/${operation}`;
