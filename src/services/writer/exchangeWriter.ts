@@ -4,8 +4,11 @@ import type { RuntimeScope } from '../../oasisQuery/types/searchScope'
 import { ContractName } from '../../contractsConfig/types'
 import { isDbConfigured, db } from '../../config/db.client'
 import { ensureUserIdExist } from './ensureUsersId'
-import { getEventArgAsString, sanitizeForDb } from '../../utils/getEventArgs'
-import type { DecodedRuntimeEvent } from '../../oasisQuery/app/services/events'
+import { getEventArgAsString } from '../../utils/getContractsEventArgs'
+import { sanitizeForDb } from '../../utils/bigInt'
+import { getEventArg } from '../../utils/eventArgs'
+import type { RuntimeEvent } from '../../oasisQuery/oasis-nexus/api'
+
 import type { ExchangeEventType } from '../../contractsConfig/eventSignatures/eventType'
 import { extractTimestamp } from '../../utils/extractTimestamp'
 import { getBoolean } from '../../utils/getBoolean'
@@ -17,7 +20,7 @@ import { Database } from '../../types/dataBase'
  */
 export const handleBoxListed = async (
     scope: RuntimeScope,
-    event: DecodedRuntimeEvent<Record<string, unknown>>,
+    event: RuntimeEvent,
 ): Promise<void> => {
     const boxId = getEventArgAsString(event, 'boxId')
     const userId = getEventArgAsString(event, 'userId')
@@ -71,7 +74,7 @@ const _updateBuyerPurchaseTimestamp = async (
 
 export const handleBoxPurchased = async (
     scope: RuntimeScope,
-    event: DecodedRuntimeEvent<Record<string, unknown>>,
+    event: RuntimeEvent,
 ): Promise<void> => {
     const boxId = getEventArgAsString(event, 'boxId')
     const userId = getEventArgAsString(event, 'userId')
@@ -92,7 +95,7 @@ export const handleBoxPurchased = async (
  */
 export const handleBidPlaced = async (
     scope: RuntimeScope,
-    event: DecodedRuntimeEvent<Record<string, unknown>>,
+    event: RuntimeEvent,
 ): Promise<void> => {
     const boxId = getEventArgAsString(event, 'boxId')
     const timestamp = extractTimestamp(event)
@@ -135,7 +138,7 @@ export const handleBidPlaced = async (
  */
 export const handleCompleterAssigned = async (
     scope: RuntimeScope,
-    event: DecodedRuntimeEvent<Record<string, unknown>>,
+    event: RuntimeEvent,
 ): Promise<void> => {
     const boxId = getEventArgAsString(event, 'boxId')
     const userId = getEventArgAsString(event, 'userId')
@@ -164,7 +167,7 @@ export const handleCompleterAssigned = async (
  */
 export const handleRequestDeadlineChanged = async (
     scope: RuntimeScope,
-    event: DecodedRuntimeEvent<Record<string, unknown>>,
+    event: RuntimeEvent,
 ): Promise<void> => {
     const boxId = getEventArgAsString(event, 'boxId')
     const deadline = getEventArgAsString(event, 'deadline')
@@ -190,7 +193,7 @@ export const handleRequestDeadlineChanged = async (
  */
 export const handleReviewDeadlineChanged = async (
     scope: RuntimeScope,
-    event: DecodedRuntimeEvent<Record<string, unknown>>,
+    event: RuntimeEvent,
 ): Promise<void> => {
     const boxId = getEventArgAsString(event, 'boxId')
     const deadline = getEventArgAsString(event, 'deadline')
@@ -216,13 +219,13 @@ export const handleReviewDeadlineChanged = async (
  */
 export const handleRefundPermitChanged = async (
     scope: RuntimeScope,
-    event: DecodedRuntimeEvent<Record<string, unknown>>,
+    event: RuntimeEvent,
 ): Promise<void> => {
     const boxId = getEventArgAsString(event, 'boxId')
     if (!boxId) return
 
-    // permission is a boolean value, get directly from event args
-    const permissionRaw = (event.args as Record<string, unknown>)?.permission
+    // permission is a boolean value, get directly from event parameters
+    const permissionRaw = getEventArg<unknown>(event, 'permission')
     const permission = getBoolean(permissionRaw, boxId)
 
     const updates = sanitizeForDb({
@@ -248,7 +251,7 @@ export const handleRefundPermitChanged = async (
 export const persistExchangeSync = async (
     scope: RuntimeScope,
     contract: ContractName,
-    events: DecodedRuntimeEvent<any>[],
+    events: RuntimeEvent[],
 ): Promise<void> => {
     if (!isDbConfigured()) {
         console.warn('⚠️  Database URL / secret not configured, skipping database write')
@@ -268,8 +271,8 @@ export const persistExchangeSync = async (
     }
 
     const sortedEvents = events.sort((a, b) => {
-        const eventNameA = a.eventName as ExchangeEventType
-        const eventNameB = b.eventName as ExchangeEventType
+        const eventNameA = a.evm_log_name as ExchangeEventType
+        const eventNameB = b.evm_log_name as ExchangeEventType
         const priorityA = getPriority(eventNameA)
         const priorityB = getPriority(eventNameB)
         return priorityA - priorityB
@@ -278,7 +281,7 @@ export const persistExchangeSync = async (
     console.log(`📝 Processing Exchange events with priority sorting...`)
 
     for (const event of sortedEvents) {
-        const eventName = event.eventName as ExchangeEventType
+        const eventName = event.evm_log_name as ExchangeEventType
         switch (eventName) {
             case 'BoxListed':
                 await handleBoxListed(scope, event)
@@ -304,4 +307,5 @@ export const persistExchangeSync = async (
         }
     }
 }
+
 

@@ -6,12 +6,12 @@ import { saveEventDataToFile, shouldSaveEventDataToFile } from '../dev-tools/sav
 import { updateSyncStatus } from '../sync-engine/state'
 import { persistBlindBoxSync } from '../services/writer/blindBoxWriter'
 import { CONTROLLER } from '../controller'
-import type { DecodedRuntimeEvent } from '../oasisQuery/app/services/events'
+import type { RuntimeEvent } from '../oasisQuery/oasis-nexus/api'
 
 export interface FetchBlindBoxEventsResult {
   outputPath: string | null 
   block_number: number
-  events: DecodedRuntimeEvent<Record<string, unknown>>[]
+  events: RuntimeEvent[]
 }
 
 /**
@@ -59,7 +59,7 @@ export async function fetchBlindBoxEvents(
   // Enable via environment variable EVENT_SYNC_SAVE_JSON=true
   let outputPath: string | null = null
   if (shouldSaveEventDataToFile()) {
-    outputPath = await saveEventDataToFile(scope, ContractName.BLIND_BOX, syncResult)
+    outputPath = await saveEventDataToFile(scope, ContractName.BLIND_BOX, decodedEvents)
   }
 
   return {

@@ -1,17 +1,19 @@
 import type { RuntimeScope } from '../../oasisQuery/types/searchScope'
-import type { DecodedRuntimeEvent } from '../../oasisQuery/app/services/events'
+import type { RuntimeEvent } from '../../oasisQuery/oasis-nexus/api'
 import { db } from '../../config/db.client'
-import { sanitizeForDb, getEventArgAsString } from '../../utils/getEventArgs'
+import { sanitizeForDb } from '../../utils/bigInt'
+import { getEventArgAsString } from '../../utils/getContractsEventArgs'
 import { Database } from '../../types/dataBase'
+
 
 /**
  * Process all events to ensure users records exist
  * Note: Events are processed in order, use batch upsert for better performance
-
+ 
  */
 export const ensureUserIdExist = async (
     scope: RuntimeScope,
-    events: DecodedRuntimeEvent<any>[],
+    events: RuntimeEvent[],
 ) => {
     const userIds = new Set<string>()
 
@@ -45,4 +47,5 @@ export const ensureUserIdExist = async (
         console.log(`✅ Users upserted:`, userIds)
     }
 }
+
 

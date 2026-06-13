@@ -3,7 +3,6 @@ import { db } from '../../config/db.client'
 import { Database } from '../../types/dataBase'
 import { fetchMetadataBox } from '../ipfs/fetchMetadataBox'
 import type { MetadataBoxPayload } from '../ipfs/fetchMetadataBox'
-import { sanitizeForDb } from '../../utils/getEventArgs'
 
 // Removed V2_BLOCK_THRESHOLD and v1 conversion logic as per user request to only keep v2.
 
@@ -59,15 +58,15 @@ const normalizeMetadataRecord = (
 
   // Sanitize nested objects that may contain BigInt
   const encryptionSlicesMetadataCID = metadata.encryption_slices_metadata_cid
-    ? (sanitizeForDb(metadata.encryption_slices_metadata_cid) as Record<string, unknown>)
+    ? (metadata.encryption_slices_metadata_cid as Record<string, unknown>)
     : null
 
   const encryptionFileCID = metadata.encryption_file_cid
-    ? (sanitizeForDb(metadata.encryption_file_cid) as Record<string, unknown>[])
+    ? (metadata.encryption_file_cid as Record<string, unknown>[])
     : null
 
   const encryptionPasswords = metadata.encryption_passwords
-    ? (sanitizeForDb(metadata.encryption_passwords) as Record<string, unknown>)
+    ? (metadata.encryption_passwords as Record<string, unknown>)
     : null
 
   return {
@@ -107,7 +106,7 @@ export const upsertMetadataFromEvents = async (
     console.log(`✅ Successfully normalized metadata for box ${boxId}`)
 
     // Sanitize all records to ensure no BigInt
-    const sanitizedRecord = sanitizeForDb(record) as Database['public']['Tables']['metadata_boxes']['Insert']
+    const sanitizedRecord = record as Database['metadata_boxes']
     
     const { error } = await db.upsert('metadata_boxes', sanitizedRecord)
     

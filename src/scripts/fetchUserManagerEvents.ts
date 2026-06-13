@@ -7,12 +7,12 @@ import { updateSyncStatus } from '../sync-engine/state'
 import { persistUserManagerSync } from '../services/writer/userManagerWriter'
 import { CONTROLLER } from '../controller'
 
-import type { DecodedRuntimeEvent } from '../oasisQuery/app/services/events'
+import type { RuntimeEvent } from '../oasisQuery/oasis-nexus/api'
 
 export interface FetchUserManagerEventsResult {
     outputPath: string | null
     block_number: number
-    events: DecodedRuntimeEvent<Record<string, unknown>>[]
+    events: RuntimeEvent[]
 }
 
 /**
@@ -56,7 +56,7 @@ export async function fetchUserManagerEvents(
     }
     let outputPath: string | null = null
     if (shouldSaveEventDataToFile()) {
-        outputPath = await saveEventDataToFile(scope, ContractName.USER_MANAGER, syncResult)
+        outputPath = await saveEventDataToFile(scope, ContractName.USER_MANAGER, decodedEvents)
     }
 
     return {

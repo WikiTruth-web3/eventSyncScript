@@ -4,28 +4,15 @@ import type { RuntimeScope } from '../../oasisQuery/types/searchScope'
 import { ContractName } from '../../contractsConfig/types'
 import { isDbConfigured, db } from '../../config/db.client'
 import { ensureUserIdExist } from './ensureUsersId'
-import { getEventArgAsString, sanitizeForDb } from '../../utils/getEventArgs'
+import { sanitizeForDb } from '../../utils/bigInt'
+import { getEventArgAsString, DecodedContractEvent } from '../../utils/getContractsEventArgs'
 import { getEventArg } from '../../utils/eventArgs'
 import { normalizeHash } from '../../utils/eventArgs'
-import type { DecodedRuntimeEvent } from '../../oasisQuery/app/services/events'
-import type { FundManagerEventType } from '../../contractsConfig/eventSignatures/eventType'
-import { extractTimestamp } from '../../utils/extractTimestamp'
-import { generateRecordId } from '../../utils/generateId'
-import { Database } from '../../types/dataBase'
+import type { RuntimeEvent } from '../../oasisQuery/oasis-nexus/api'
 
-/**
- * Convert transaction hash to BYTEA
- */
-const hashToBytea = (hash: string): Uint8Array => {
-    // Remove 0x prefix
-    const hex = hash.startsWith('0x') ? hash.slice(2) : hash
-    // Convert to Uint8Array
-    const bytes = new Uint8Array(hex.length / 2)
-    for (let i = 0; i < hex.length; i += 2) {
-        bytes[i / 2] = parseInt(hex.substr(i, 2), 16)
-    }
-    return bytes
-}
+import type { FundManagerEventType } from '../../contractsConfig/eventSignatures/eventType'
+
+import { Database } from '../../types/dataBase'
 
 /**
  * Handle OrderAmountPaid event
@@ -33,7 +20,7 @@ const hashToBytea = (hash: string): Uint8Array => {
  */
 export const handlePayment = async (
     scope: RuntimeScope,
-    event: DecodedRuntimeEvent<Record<string, unknown>>,
+    event: DecodedContractEvent<ContractName.FUND_MANAGER , 'Payment'>,
 ): Promise<void> => {
     const boxId = getEventArgAsString(event, 'boxId')
     const userId = getEventArgAsString(event, 'userId')
@@ -42,11 +29,8 @@ export const handlePayment = async (
 
     if (!boxId || !userId || !token || !amount) return
 
-    const timestamp = extractTimestamp(event)
+    const timestamp = event.timestamp
     const recordId = generateRecordId(event)
-    const txHash = normalizeHash(event.raw.tx_hash ?? event.raw.eth_tx_hash)
-
-    if (!txHash) return
 
     const paymentData = sanitizeForDb({ 
         network: scope.network as 'testnet' | 'mainnet',
@@ -58,7 +42,7 @@ export const handlePayment = async (
         amount: amount,
         type:'any',
         timestamp: timestamp,
-        transaction_hash: hashToBytea(txHash),
+        transaction_hash: event.eth_tx_hash,
     }) as Database['public']['Tables']['payments']['Insert']
 
     const { error } = await db.upsert('payments', paymentData)
@@ -77,7 +61,7 @@ export const handlePayment = async (
  */
 export const handleOrderAmountWithdraw = async (
     scope: RuntimeScope,
-    event: DecodedRuntimeEvent<Record<string, unknown>>,
+    event: RuntimeEvent,
 ): Promise<void> => {
     const listRaw = getEventArg<unknown>(event, 'list')
     const token = getEventArgAsString(event, 'token')
@@ -93,11 +77,7 @@ export const handleOrderAmountWithdraw = async (
 
     // fundsType is uint8，0 = Order, 1 = Refund
 
-    const timestamp = extractTimestamp(event)
     const recordId = generateRecordId(event)
-    const txHash = normalizeHash(event.raw.tx_hash ?? event.raw.eth_tx_hash)
-
-    if (!txHash) return
 
     const withdrawData = sanitizeForDb({
         network: scope.network as 'testnet' | 'mainnet',
@@ -107,8 +87,8 @@ export const handleOrderAmountWithdraw = async (
         box_id_list: boxList,
         user_id: userId,
         amount: amount,
-        timestamp: timestamp,
-        transaction_hash: hashToBytea(txHash),
+        timestamp: event.timestamp,
+        transaction_hash: event.eth_tx_hash,
     }) as Database['public']['Tables']['order_refund_withdraws']['Insert']
 
     const { error } = await db.upsert('order_refund_withdraws', withdrawData)
@@ -123,9 +103,9 @@ export const handleOrderAmountWithdraw = async (
 
 export const handleRefundAmountWithdraw = async (
     scope: RuntimeScope,
-    event: DecodedRuntimeEvent<Record<string, unknown>>,
+    event: RuntimeEvent,
 ): Promise<void> => {
-    const listRaw = getEventArg<unknown>(event, 'list')
+    const listRaw = getEventArgAsString(event, 'list')
     const token = getEventArgAsString(event, 'token')
     const userId = getEventArgAsString(event, 'userId')
     const amount = getEventArgAsString(event, 'amount')
@@ -139,11 +119,8 @@ export const handleRefundAmountWithdraw = async (
 
     // fundsType is uint8，0 = Order, 1 = Refund
 
-    const timestamp = extractTimestamp(event)
-    const recordId = generateRecordId(event)
-    const txHash = normalizeHash(event.raw.tx_hash ?? event.raw.eth_tx_hash)
 
-    if (!txHash) return
+    const recordId = generateRecordId(event)
 
     const withdrawData = sanitizeForDb({
         network: scope.network as 'testnet' | 'mainnet',
@@ -153,8 +130,8 @@ export const handleRefundAmountWithdraw = async (
         box_id_list: boxList,
         user_id: userId,
         amount: amount,
-        timestamp: timestamp,
-        transaction_hash: hashToBytea(txHash),
+        timestamp: event.timestamp,
+        transaction_hash: event.eth_tx_hash,
     }) as Database['public']['Tables']['order_refund_withdraws']['Insert']
 
     const { error } = await db.upsert('order_refund_withdraws', withdrawData)
@@ -172,23 +149,15 @@ export const handleRefundAmountWithdraw = async (
  */
 export const handleRewardAdded = async (
     scope: RuntimeScope,
-    event: DecodedRuntimeEvent<Record<string, unknown>>,
+    event: RuntimeEvent,
 ): Promise<void> => {
     const boxId = getEventArgAsString(event, 'boxId')
     const token = getEventArgAsString(event, 'token')
     const amount = getEventArgAsString(event, 'amount')
-    const rewardTypeRaw = getEventArg<unknown>(event, 'rewardType')
 
     if (!boxId || !token || !amount || rewardTypeRaw === undefined) return
 
-    const rewardTypeNum = typeof rewardTypeRaw === 'bigint' ? Number(rewardTypeRaw) : Number(rewardTypeRaw)
-    console.log ('reward_uint8:',rewardTypeNum)
-
-    const timestamp = extractTimestamp(event)
     const recordId = generateRecordId(event)
-    const txHash = normalizeHash(event.raw.tx_hash ?? event.raw.eth_tx_hash)
-
-    if (!txHash) return
 
     const rewardData = sanitizeForDb({
         network: scope.network as 'testnet' | 'mainnet',
@@ -197,8 +166,8 @@ export const handleRewardAdded = async (
         box_id: boxId,
         token: token.toLowerCase(),
         amount: amount,
-        timestamp: timestamp,
-        transaction_hash: hashToBytea(txHash),
+        timestamp: event.timestamp,
+        transaction_hash: event.eth_tx_hash,
     }) as Database['public']['Tables']['rewards_addeds']['Insert']
 
     const { error } = await db.upsert('rewards_addeds', rewardData)
@@ -218,7 +187,7 @@ export const handleRewardAdded = async (
  */
 export const handleRewardsWithdraw = async (
     scope: RuntimeScope,
-    event: DecodedRuntimeEvent<Record<string, unknown>>,
+    event: RuntimeEvent,
 ): Promise<void> => {
     const userId = getEventArgAsString(event, 'userId')
     const token = getEventArgAsString(event, 'token')
@@ -226,11 +195,8 @@ export const handleRewardsWithdraw = async (
 
     if (!userId || !token || !amount) return
 
-    const timestamp = extractTimestamp(event)
-    const recordId = generateRecordId(event)
-    const txHash = normalizeHash(event.raw.tx_hash ?? event.raw.eth_tx_hash)
 
-    if (!txHash) return
+    const recordId = generateRecordId(event)
 
     const withdrawData = sanitizeForDb({
         network: scope.network as 'testnet' | 'mainnet',
@@ -240,8 +206,8 @@ export const handleRewardsWithdraw = async (
         box_id_list: [], 
         user_id: userId,
         amount: amount,
-        timestamp: timestamp,
-        transaction_hash: hashToBytea(txHash),
+        timestamp: event.timestamp,
+        transaction_hash: event.eth_tx_hash,
     }) as Database['public']['Tables']['rewards_withdraws']['Insert']
 
     const { error } = await db.upsert('rewards_withdraws', withdrawData)
@@ -259,9 +225,9 @@ export const handleRewardsWithdraw = async (
  */
 export const handleFundManagerState = async (
     scope: RuntimeScope,
-    event: DecodedRuntimeEvent<Record<string, unknown>>,
+    event: RuntimeEvent,
 ): Promise<void> => {
-    const isPaused = event.eventName === 'Paused'
+    const isPaused = event.evm_log_name === 'Paused'
 
     const { error } = await db.upsert('fund_manager_state', {
             network: scope.network as 'testnet' | 'mainnet',
@@ -301,7 +267,7 @@ export const ensureFundManagerStateExists = async (scope: RuntimeScope): Promise
 export const persistFundManagerSync = async (
     scope: RuntimeScope,
     contract: ContractName,
-    events: DecodedRuntimeEvent<any>[],
+    events: RuntimeEvent[],
 ): Promise<void> => {
     if (!isDbConfigured()) {
         console.warn('⚠️  Database URL / secret not configured, skipping database write')
@@ -323,8 +289,8 @@ export const persistFundManagerSync = async (
     }
 
     const sortedEvents = events.sort((a, b) => {
-        const eventNameA = a.eventName as FundManagerEventType
-        const eventNameB = b.eventName as FundManagerEventType
+        const eventNameA = a.evm_log_name as FundManagerEventType
+        const eventNameB = b.evm_log_name as FundManagerEventType
         const priorityA = getPriority(eventNameA)
         const priorityB = getPriority(eventNameB)
         return priorityA - priorityB
@@ -333,10 +299,10 @@ export const persistFundManagerSync = async (
     console.log(`📝 Processing FundManager events with priority sorting...`)
 
     for (const event of sortedEvents) {
-        const eventName = event.eventName as FundManagerEventType
+        const eventName = event.evm_log_name as FundManagerEventType
         switch (eventName) {
             case 'Payment':
-                await handlePayment(scope, event)
+                await handlePayment(scope, event as DecodedContractEvent<ContractName.FUND_MANAGER , 'Payment'>)
                 break
             case 'RewardAdded':
                 await handleRewardAdded(scope, event)
@@ -353,4 +319,5 @@ export const persistFundManagerSync = async (
         }
     }
 }
+
 

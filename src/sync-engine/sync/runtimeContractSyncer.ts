@@ -5,7 +5,7 @@ import { fetchRuntimeContractEvents } from '../events'
 import type { EventFetchResult } from '../events/types'
 import { getSyncCursor } from '../state'
 import type { ContractSyncKey, SyncCursor } from '../state'
-import { decodeContractEvents, type DecodedRuntimeEvent } from '../../utils/decodeEvents'
+import { decodeContractEvents } from '../../utils/decodeEvents'
 
 export interface RuntimeContractSyncOptions {
   scope: RuntimeScope
@@ -23,7 +23,7 @@ export interface RuntimeContractSyncResult<TArgs = Record<string, unknown>> {
   cursorBefore: SyncCursor
   cursorAfter: SyncCursor
   fetchResult: EventFetchResult<TArgs>
-  decodedEvents: DecodedRuntimeEvent<TArgs>[]
+  decodedEvents: RuntimeEvent[]
 }
 
 const buildCursorKey = (scope: RuntimeScope, contract: ContractName): ContractSyncKey => ({
@@ -99,7 +99,7 @@ export const syncRuntimeContractEvents = async <TArgs = Record<string, unknown>>
     : cursor
 
   // Decode fetched events using our smart hybrid decoder
-  const decodedEvents = decodeContractEvents<TArgs>(
+  const decodedEvents = decodeContractEvents(
     fetchResult.rawEvents,
     contract,
     scope,

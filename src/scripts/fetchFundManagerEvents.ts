@@ -6,12 +6,12 @@ import { saveEventDataToFile, shouldSaveEventDataToFile } from '../dev-tools/sav
 import { updateSyncStatus } from '../sync-engine/state'
 import { persistFundManagerSync } from '../services/writer/fundManagerWriter'
 import { CONTROLLER } from '../controller'
-import type { DecodedRuntimeEvent } from '../oasisQuery/app/services/events'
+import type { RuntimeEvent } from '../oasisQuery/oasis-nexus/api'
 
 export interface FetchFundManagerEventsResult {
     outputPath: string | null
     block_number: number
-    events: DecodedRuntimeEvent<Record<string, unknown>>[]
+    events: RuntimeEvent[]
 }
 
 /**
@@ -55,7 +55,7 @@ export async function fetchFundManagerEvents(
     }
     let outputPath: string | null = null
     if (shouldSaveEventDataToFile()) {
-        outputPath = await saveEventDataToFile(scope, ContractName.FUND_MANAGER, syncResult)
+        outputPath = await saveEventDataToFile(scope, ContractName.FUND_MANAGER, decodedEvents)
     }
 
     return {

@@ -2,7 +2,7 @@ import type { RuntimeScope } from '../../oasisQuery/types/searchScope'
 import { isDbConfigured, db } from '../../config/db.client'
 import { Database } from '../../types/dataBase'
 import { ContractName } from '../../contractsConfig/types'
-import type { DecodedRuntimeEvent } from '../../oasisQuery/app/services/events'
+import type { RuntimeEvent } from '../../oasisQuery/oasis-nexus/api'
 import type { ForwarderEventType } from '../../contractsConfig/eventSignatures/eventType'
 
 /**
@@ -11,9 +11,9 @@ import type { ForwarderEventType } from '../../contractsConfig/eventSignatures/e
  */
 export const handleForwarderState = async (
     scope: RuntimeScope,
-    event: DecodedRuntimeEvent<Record<string, unknown>>,
+    event: RuntimeEvent,
 ): Promise<void> => {
-    const isPaused = event.eventName === 'Paused'
+    const isPaused = event.evm_log_name === 'Paused'
 
     const { error } = await db.upsert('forwarder_state', {
             network: scope.network as 'testnet' | 'mainnet',
@@ -35,7 +35,7 @@ export const handleForwarderState = async (
 export const persistForwarderSync = async (
     scope: RuntimeScope,
     contract: ContractName,
-    events: DecodedRuntimeEvent<any>[],
+    events: RuntimeEvent[],
 ): Promise<void> => {
     if (!isDbConfigured()) {
         console.warn('⚠️  Database URL / secret not configured, skipping database write')
@@ -45,9 +45,10 @@ export const persistForwarderSync = async (
     if (contract !== ContractName.FORWARDER) return
 
     for (const event of events) {
-        const eventName = event.eventName as ForwarderEventType
+        const eventName = event.evm_log_name as ForwarderEventType
         if (eventName === 'Paused' || eventName === 'Unpaused') {
             await handleForwarderState(scope, event)
         }
     }
 }
+

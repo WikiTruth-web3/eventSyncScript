@@ -1,11 +1,12 @@
 import { ContractName } from '../contractsConfig/types'
-import type { DecodedRuntimeEvent } from '../oasisQuery/app/services/events'
-import { 
-  getEventArgAsString as rawGetEventArgAsString,
-  getEventArgAsBoolean as rawGetEventArgAsBoolean,
-  hasEventArg as rawHasEventArg,
-} from './getEventArgs'
-import { getEventArg as rawGetEventArg } from './eventArgs'
+import type { RuntimeEvent } from '../oasisQuery/oasis-nexus/api'
+
+const rawGetEventArg = <T = unknown>(event: RuntimeEvent, key: string): T | undefined => {
+  const param = (event.evm_log_params as Array<{ name: string; value: unknown }> | undefined)?.find(
+    p => p.name === key,
+  )
+  return param?.value as T | undefined
+}
 
 // 1. 各个合约的事件参数 Interface 定义
 export interface BlindBoxEventArgs {
@@ -109,7 +110,7 @@ export interface ForwarderEventArgs {
   }
 }
 
-// 2. 将合约名称映射到具体的事件及其参数
+// 2. 将合约名称映射 to 具体的事件及其参数
 export interface ContractEventMap {
   [ContractName.BLIND_BOX]: BlindBoxEventArgs
   [ContractName.EXCHANGE]: ExchangeEventArgs
@@ -121,51 +122,68 @@ export interface ContractEventMap {
 }
 
 // 3. 定义强类型的 DecodedContractEvent
-export type DecodedContractEvent<
+export interface DecodedContractEvent<
   C extends ContractName,
   E extends keyof ContractEventMap[C]
-> = Omit<DecodedRuntimeEvent<unknown>, 'args'> & {
-  eventName: E
-  args: ContractEventMap[C][E]
+> extends Omit<RuntimeEvent, 'evm_log_name'> {
+  evm_log_name: E & string
 }
 
-// 4. 重构并导出强类型的参数提取函数（通过 keyof TArgs 限制 key）
+// 4. 重构并导出强类型的参数提取函数（通过 keyof TArgs 限制 key，提供默认泛型以无缝兼容非强类型场景）
 export function getEventArgAsString<
-  TArgs extends Record<string, any>,
-  K extends keyof TArgs
+  TArgs extends Record<string, any> = Record<string, any>,
+  K extends keyof TArgs = any
 >(
-  event: DecodedRuntimeEvent<TArgs> | (Omit<DecodedRuntimeEvent<unknown>, 'args'> & { args: TArgs }),
+  event: RuntimeEvent,
   key: K
 ): string | undefined {
-  return rawGetEventArgAsString(event as any, key as string)
+  const value = rawGetEventArg<unknown>(event, key as string)
+  if (value === undefined || value === null) {
+    return ''
+  }
+  if (typeof value === 'bigint') {
+    return value.toString()
+  }
+  return String(value)
 }
 
 export function getEventArgAsBoolean<
-  TArgs extends Record<string, any>,
-  K extends keyof TArgs
+  TArgs extends Record<string, any> = Record<string, any>,
+  K extends keyof TArgs = any
 >(
-  event: DecodedRuntimeEvent<TArgs> | (Omit<DecodedRuntimeEvent<unknown>, 'args'> & { args: TArgs }),
+  event: RuntimeEvent,
   key: K
 ): boolean {
-  return rawGetEventArgAsBoolean(event as any, key as string)
+  const value = rawGetEventArg<unknown>(event, key as string)
+  if (value === undefined || value === null) {
+    return false
+  }
+  if (typeof value === 'boolean') {
+    return value
+  }
+  const str = String(value).toLowerCase()
+  return str === 'true' || str === '1'
 }
 
 export function getEventArgValue<
-  TArgs extends Record<string, any>,
-  K extends keyof TArgs
+  TArgs extends Record<string, any> = Record<string, any>,
+  K extends keyof TArgs = any
 >(
-  event: DecodedRuntimeEvent<TArgs> | (Omit<DecodedRuntimeEvent<unknown>, 'args'> & { args: TArgs }),
+  event: RuntimeEvent,
   key: K
 ): TArgs[K] | undefined {
-  return rawGetEventArg<TArgs[K]>(event as any, key as string)
+  return rawGetEventArg<TArgs[K]>(event, key as string)
 }
 
 export function hasEventArg<
-  TArgs extends Record<string, any>,
-  K extends keyof TArgs
+  TArgs extends Record<string, any> = Record<string, any>,
+  K extends keyof TArgs = any
 >(
-  event: DecodedRuntimeEvent<TArgs> | (Omit<DecodedRuntimeEvent<unknown>, 'args'> & { args: TArgs }),
+  event: RuntimeEvent,
   key: K
 ): boolean {
-  return rawHasEventArg(event as any, key as string)
+  const value = rawGetEventArg<unknown>(event, key as string)
+  return value !== undefined && value !== null
 }
+
+

@@ -7,8 +7,7 @@ import type { RuntimeEvent } from '../oasisQuery/oasis-nexus/api'
 import type { RuntimeScope } from '../oasisQuery/types/searchScope'
 import { ContractName } from '../contractsConfig/types'
 import { getContractEventSignatures } from '../contractsConfig/eventSignatures/events'
-import { decodeRuntimeEvents, type DecodedRuntimeEvent } from '../oasisQuery/app/services/events'
-export type { DecodedRuntimeEvent } from '../oasisQuery/app/services/events'
+import { decodeRuntimeEvents } from '../oasisQuery/app/services/events'
 import { NETWORK_CONTRACTS } from '../contractsConfig/contracts'
 import { SupportedChainId } from '../contractsConfig/types'
 
@@ -49,13 +48,13 @@ const resolveContractAddress = (
 }
 
 /**
- * Decode events for a single contract
+ * Decode events for a single contract, return native RuntimeEvent objects
  */
-export const decodeContractEvents = <TArgs = Record<string, unknown>>(
+export const decodeContractEvents = (
     rawEvents: RuntimeEvent[],
     contractName: ContractName,
     scope: RuntimeScope,
-): DecodedRuntimeEvent<TArgs>[] => {
+): RuntimeEvent[] => {
     // Resolve contract address
     const contractAddress = resolveContractAddress(scope, contractName)
     if (!contractAddress) {
@@ -64,7 +63,7 @@ export const decodeContractEvents = <TArgs = Record<string, unknown>>(
     }
 
     const targetAddress = contractAddress.toLowerCase()
-    const decodedEvents: DecodedRuntimeEvent<TArgs>[] = []
+    const decodedEvents: RuntimeEvent[] = []
     const eventSignatures = getContractEventSignatures(contractName)
 
     for (const event of rawEvents) {
@@ -75,30 +74,25 @@ export const decodeContractEvents = <TArgs = Record<string, unknown>>(
         if (address !== targetAddress) continue
 
         // 1. If Nexus has already decoded this event, reuse the decoded name and parameters directly
-        if ((event as any).evm_log_name) {
-            const args: Record<string, unknown> = {}
-            const params = (event as any).evm_log_params || []
-            for (const param of params) {
-                if (param.name) {
-                    args[param.name] = param.value
-                }
-            }
-
-            decodedEvents.push({
-                eventName: (event as any).evm_log_name,
-                args: args as TArgs,
-                raw: event,
-            })
+        if (event.evm_log_name) {
+            decodedEvents.push(event)
         } 
-        // 2. If it is not decoded by Nexus (unverified contract), fall back to local ABI decoding
+        // 2. If it is not decoded by Nexus (unverified contract), fall back to local ABI decoding and populate fields
         else if (eventSignatures && eventSignatures.length > 0) {
             try {
-                const localDecoded = decodeRuntimeEvents<TArgs>([event], {
+                const localDecoded = decodeRuntimeEvents([event], {
                     contractAddress,
                     eventSignatures,
                 })
                 if (localDecoded.length > 0) {
-                    decodedEvents.push(localDecoded[0])
+                    const decodedItem = localDecoded[0]
+                    event.evm_log_name = decodedItem.eventName
+                    event.evm_log_params = Object.entries(decodedItem.args || {}).map(([name, value]) => ({
+                        name,
+                        evm_type: '', // placeholder solidity type, not needed by our parameter extractor
+                        value,
+                    }))
+                    decodedEvents.push(event)
                 }
             } catch (err) {
                 console.debug(`Skipped decoding log at block ${event.round} via local ABI`, err)
@@ -106,13 +100,10 @@ export const decodeContractEvents = <TArgs = Record<string, unknown>>(
         }
     }
 
-    // Strip the large body field from raw events to reduce data volume (requested by user)
+    // Strip body and unused fields (tx_hash, tx_index, type) from raw events to reduce data volume (requested by user)
     return decodedEvents.map(event => {
-        const { body, ...rawWithoutBody } = event.raw as any
-        return {
-            ...event,
-            raw: rawWithoutBody
-        }
+        const { body, tx_hash, tx_index, type, ...rawWithoutUnused } = event as any
+        return rawWithoutUnused as RuntimeEvent
     })
 }
 
@@ -121,16 +112,16 @@ export const decodeContractEvents = <TArgs = Record<string, unknown>>(
  * If contract name is provided, only decode events for that contract
  * If not provided, will try all configured contracts
  */
-export const decodeMultiContractEvents = <TArgs = Record<string, unknown>>(
+export const decodeMultiContractEvents = (
     rawEvents: RuntimeEvent[],
     scope: RuntimeScope,
     contractName?: ContractName,
-): Array<DecodedRuntimeEvent<TArgs> & { contract: ContractName }> => {
-    const results: Array<DecodedRuntimeEvent<TArgs> & { contract: ContractName }> = []
+): Array<RuntimeEvent & { contract: ContractName }> => {
+    const results: Array<RuntimeEvent & { contract: ContractName }> = []
 
     if (contractName) {
         // Only decode events for specified contract
-        const decoded = decodeContractEvents<TArgs>(rawEvents, contractName, scope)
+        const decoded = decodeContractEvents(rawEvents, contractName, scope)
         results.push(...decoded.map(event => ({ ...event, contract: contractName })))
     } else {
         // Try decoding all configured contracts
@@ -142,11 +133,10 @@ export const decodeMultiContractEvents = <TArgs = Record<string, unknown>>(
         ]
 
         for (const contract of contractsToTry) {
-            const decoded = decodeContractEvents<TArgs>(rawEvents, contract, scope)
+            const decoded = decodeContractEvents(rawEvents, contract, scope)
             results.push(...decoded.map(event => ({ ...event, contract })))
         }
     }
 
     return results
 }
-

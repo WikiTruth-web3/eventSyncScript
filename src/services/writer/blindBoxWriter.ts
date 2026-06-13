@@ -5,11 +5,11 @@ import { db } from '../../config/db.client'
 import { Database } from '../../types/dataBase'
 import { getEventArg } from '../../utils/eventArgs'
 import { ensureUserIdExist } from './ensureUsersId'
-import { sanitizeForDb } from '../../utils/getEventArgs'
+import { sanitizeForDb } from '../../utils/bigInt'
 import { getEventArgAsString, DecodedContractEvent } from '../../utils/getContractsEventArgs'
-import type { DecodedRuntimeEvent } from '../../oasisQuery/app/services/events'
+import type { RuntimeEvent } from '../../oasisQuery/oasis-nexus/api'
+
 import type { BlindBoxEventType } from '../../contractsConfig/eventSignatures/eventType'
-import { extractTimestamp } from '../../utils/extractTimestamp'
 import { upsertMetadataFromEvents } from './metadataWriter'
 import { CONTROLLER } from '../../controller'
 
@@ -32,13 +32,10 @@ export const handleBoxCreated = async (
     // Only skip if boxId or userId is undefined (0 is a valid value)
     if (boxId === undefined || userId === undefined) return
 
-    // Extract timestamp from event
-    const createTimestamp = extractTimestamp(event)
-
     // Create new box record
     // Note: token_id needs to be string-formatted number, cannot use BigInt (cannot serialize)
     // Note: According to supabase.config.ts, box_info_cid is a required field (can be null)
-    const boxData: Database['public']['Tables']['boxes']['Insert'] = {
+    const boxData: Database['boxes'] = {
         network: scope.network as 'testnet' | 'mainnet',
         layer: scope.layer as 'sapphire',
         id: boxId,
@@ -48,7 +45,7 @@ export const handleBoxCreated = async (
         listed_mode: null, // NULL=Not Listed, 1=Selling, 2=Auctioning
         price: '0',
         deadline: '0',
-        create_timestamp: createTimestamp, // Required field: creation timestamp
+        create_timestamp: event.timestamp, // Required field: creation timestamp
         box_info_cid: null, // Required field, defaults to null
     }
 
@@ -90,7 +87,7 @@ export const handleBoxCreated = async (
  */
 export const handleBoxUpdate = async (
     scope: RuntimeScope,
-    event: DecodedRuntimeEvent<Record<string, unknown>>,
+    event: RuntimeEvent,
 ) => {
 
     // Use common utility to safely extract event parameters (correctly handle 0 values)
@@ -99,7 +96,7 @@ export const handleBoxUpdate = async (
 
     const updates: Database['public']['Tables']['boxes']['Update'] = {}
 
-    switch (event.eventName) {
+    switch (event.evm_log_name) {
         case 'BoxStatusChanged':
             const statusRaw = getEventArg<unknown>(event, 'status')
             if (statusRaw !== undefined && statusRaw !== null) {
@@ -110,7 +107,7 @@ export const handleBoxUpdate = async (
                 if (status === 1 || status === 2) {
                     updates.listed_mode = status
                 } else if (status === 6) {
-                    updates.publish_timestamp = extractTimestamp(event)
+                    updates.publish_timestamp = event.timestamp
                 }
             }
             break
@@ -143,9 +140,9 @@ export const handleBoxUpdate = async (
     })
 
     if (error) {
-        console.warn(`⚠️  Failed to update box ${boxId} (${event.eventName}):`, error.message)
+        console.warn(`⚠️  Failed to update box ${boxId} (${event.evm_log_name}):`, error.message)
     } else {
-        console.log(`✅ Updated box ${boxId} (${event.eventName})`)
+        console.log(`✅ Updated box ${boxId} (${event.evm_log_name})`)
     }
 }
 
@@ -161,7 +158,7 @@ export const handleBoxUpdate = async (
 export const persistBlindBoxSync = async (
     scope: RuntimeScope,
     contract: ContractName,
-    events: DecodedRuntimeEvent<any>[],
+    events: RuntimeEvent[],
 ): Promise<void> => {
     if (contract !== ContractName.BLIND_BOX) return
 
@@ -176,8 +173,8 @@ export const persistBlindBoxSync = async (
     }
 
     const sortedEvents = events.sort((a, b) => {
-        const eventNameA = a.eventName as BlindBoxEventType
-        const eventNameB = b.eventName as BlindBoxEventType
+        const eventNameA = a.evm_log_name as BlindBoxEventType
+        const eventNameB = b.evm_log_name as BlindBoxEventType
         const priorityA = getPriority(eventNameA)
         const priorityB = getPriority(eventNameB)
         if (priorityA !== priorityB) {
@@ -189,7 +186,7 @@ export const persistBlindBoxSync = async (
     console.log(`📝 Processing BlindBox events with priority sorting...`)
 
     for (const event of sortedEvents) {
-        const eventName = event.eventName as BlindBoxEventType
+        const eventName = event.evm_log_name as BlindBoxEventType
         if (eventName === 'BoxCreated') {
             await handleBoxCreated(scope, event as any)
         } else {
@@ -197,3 +194,4 @@ export const persistBlindBoxSync = async (
         }
     }
 }
+

@@ -6,12 +6,12 @@ import { saveEventDataToFile, shouldSaveEventDataToFile } from '../dev-tools/sav
 import { updateSyncStatus } from '../sync-engine/state'
 import { persistForwarderSync } from '../services/writer/forwarderWriter'
 import { CONTROLLER } from '../controller'
-import type { DecodedRuntimeEvent } from '../oasisQuery/app/services/events'
+import type { RuntimeEvent } from '../oasisQuery/oasis-nexus/api'
 
 export interface FetchForwarderEventsResult {
     outputPath: string | null
     block_number: number
-    events: DecodedRuntimeEvent<Record<string, unknown>>[]
+    events: RuntimeEvent[]
 }
 
 /**
@@ -48,7 +48,7 @@ export async function fetchForwarderEvents(
     }
     let outputPath: string | null = null
     if (shouldSaveEventDataToFile()) {
-        outputPath = await saveEventDataToFile(scope, ContractName.FORWARDER, syncResult)
+        outputPath = await saveEventDataToFile(scope, ContractName.FORWARDER, decodedEvents)
     }
 
     return {
