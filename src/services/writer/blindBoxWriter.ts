@@ -6,7 +6,6 @@ import * as DBTypes from '../../types/dataBase';
 import { ensureUserIdExist } from './ensureUsersId'
 import { getEventArgAsString, DecodedContractEvent } from '../../utils/getContractsEventArgs'
 import type { RuntimeEvent } from '../../oasisQuery/oasis-nexus/api'
-import type { BlindBoxEventArgs } from '../../contractsConfig/eventSignatures/eventMap'
 import type { BlindBoxEventType } from '../../contractsConfig/eventSignatures/eventType'
 import { timestampToNumber } from '../../utils/timestampToNumber'
 import { upsertMetadataFromEvents } from './metadataWriter'

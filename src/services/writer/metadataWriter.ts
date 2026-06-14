@@ -1,10 +1,8 @@
 import type { RuntimeScope } from '../../oasisQuery/types/searchScope'
-import { db } from '../../config/db.client'
-import { Database } from '../../types/dataBase'
+import { supabase } from '../../config/supabase.config'
 import { fetchMetadataBox } from '../ipfs/fetchMetadataBox'
-import type { MetadataBoxPayload } from '../ipfs/fetchMetadataBox'
-
-// Removed V2_BLOCK_THRESHOLD and v1 conversion logic as per user request to only keep v2.
+import type { MetadataBoxPayload } from '../../types/metadataBoxTypes'
+// import * as DBTypes from '../../types/dataBase'
 
 type MetadataRecord = {
   id: string
@@ -54,17 +52,17 @@ const normalizeMetadataRecord = (
     }
   }
 
-  // Sanitize nested objects that may contain BigInt
+  // Sanitize nested objects
   const encryptionSlicesMetadataCID = metadata.encryption_slices_metadata_cid
-    ? (metadata.encryption_slices_metadata_cid as Record<string, unknown>)
+    ? (metadata.encryption_slices_metadata_cid as unknown as Record<string, unknown>)
     : null
 
   const encryptionFileCID = metadata.encryption_file_cid
-    ? (metadata.encryption_file_cid as Record<string, unknown>[])
+    ? (metadata.encryption_file_cid as unknown as Record<string, unknown>[])
     : null
 
   const encryptionPasswords = metadata.encryption_passwords
-    ? (metadata.encryption_passwords as Record<string, unknown>)
+    ? (metadata.encryption_passwords as unknown as Record<string, unknown>)
     : null
 
   return {
@@ -101,10 +99,7 @@ export const upsertMetadataFromEvents = async (
     const record = normalizeMetadataRecord(scope, boxId, metadata)
     console.log(`✅ Successfully normalized metadata for box ${boxId}`)
 
-    // Sanitize all records to ensure no BigInt
-    const sanitizedRecord = record as Database['metadata_boxes']
-    
-    const { error } = await db.upsert('metadata_boxes', sanitizedRecord)
+    const { error } = await (supabase.from('metadata_boxes') as any).upsert(record)
     
     if (error) {
       throw new Error(`Failed to upsert metadata_boxes: ${error.message}`)

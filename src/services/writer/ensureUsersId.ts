@@ -1,15 +1,11 @@
 import type { RuntimeScope } from '../../oasisQuery/types/searchScope'
 import type { RuntimeEvent } from '../../oasisQuery/oasis-nexus/api'
-import { db } from '../../config/db.client'
-import { sanitizeForDb } from '../../utils/bigInt'
+import { supabase } from '../../config/supabase.config'
 import { getEventArgAsString } from '../../utils/getContractsEventArgs'
-import { Database } from '../../types/dataBase'
-
 
 /**
  * Process all events to ensure users records exist
  * Note: Events are processed in order, use batch upsert for better performance
- 
  */
 export const ensureUserIdExist = async (
     scope: RuntimeScope,
@@ -29,17 +25,10 @@ export const ensureUserIdExist = async (
 
     // Batch upsert to avoid multiple queries
     const userRecords = Array.from(userIds).map(userId => ({
-        network: scope.network as 'testnet' | 'mainnet',
-        layer: scope.layer as 'sapphire',
         id: userId,
     }))
     
-    // Sanitize objects to ensure no BigInt
-    const sanitizedUserRecords = userRecords.map(record => 
-        sanitizeForDb(record) as Database['public']['Tables']['users']['Insert']
-    )
-    
-    const { error } = await db.upsert('users', sanitizedUserRecords)
+    const { error } = await (supabase.from('users') as any).upsert(userRecords)
 
     if (error) {
         console.warn(`⚠️  Failed to upsert users:`, error.message)
@@ -47,5 +36,3 @@ export const ensureUserIdExist = async (
         console.log(`✅ Users upserted:`, userIds)
     }
 }
-
-

@@ -1,11 +1,9 @@
-// src/services/supabase/truthNFTWriter.ts
+// src/services/supabase/ensureAddress.ts
 import type { RuntimeScope } from '../../oasisQuery/types/searchScope'
-import { db } from '../../config/db.client'
-import { sanitizeForDb } from '../../utils/bigInt'
-import { Database } from '../../types/dataBase'
+import { supabase } from '../../config/supabase.config'
+import * as DBTypes from '../../types/dataBase'
 import { getEventArgAsString } from '../../utils/getContractsEventArgs'
 import type { RuntimeEvent } from '../../oasisQuery/oasis-nexus/api'
-
 
 /**
  * Create or update user address record
@@ -18,14 +16,12 @@ export const ensureUserAddressExists = async (
   if (!address) return
 
   // Use upsert directly, won't error even if already exists
-  const addressData = sanitizeForDb({
-    network: scope.network as 'testnet' | 'mainnet',
-    layer: scope.layer as 'sapphire',
+  const addressData: DBTypes.UserAddress = {
     id: address.toLowerCase(),
     is_blacklisted: false,
-  }) as Database['public']['Tables']['user_addresses']['Insert']
+  }
 
-  const { error } = await db.upsert('user_addresses', addressData)
+  const { error } = await (supabase.from('user_addresses') as any).upsert(addressData)
 
   if (error) {
     console.warn(`⚠️  Failed to upsert user address ${address}:`, error.message)
@@ -53,18 +49,11 @@ export const ensureAddressExist = async (
 
     // Batch upsert to avoid multiple queries
     const addressRecords = Array.from(addresses).map(address => ({
-        network: scope.network as 'testnet' | 'mainnet',
-        layer: scope.layer as 'sapphire',
         id: address.toLowerCase(),
         is_blacklisted: false,
     }))
     
-    // Sanitize objects to ensure no BigInt
-    const sanitizedAddressRecords = addressRecords.map(record => 
-        sanitizeForDb(record) as Database['public']['Tables']['user_addresses']['Insert']
-    )
-    
-    const { error } = await db.upsert('user_addresses', sanitizedAddressRecords)
+    const { error } = await (supabase.from('user_addresses') as any).upsert(addressRecords)
 
     if (error) {
         console.warn(`⚠️  Failed to upsert users:`, error.message)
@@ -72,4 +61,3 @@ export const ensureAddressExist = async (
         console.log(`✅ Users upserted:`, addresses)
     }
 }
-

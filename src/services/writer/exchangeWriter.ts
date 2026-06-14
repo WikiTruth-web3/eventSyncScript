@@ -1,18 +1,13 @@
 // src/services/supabase/exchangeWriter.ts
-// import type { RuntimeContractSyncResult } from '../../core/sync/runtimeContractSyncer'
 import type { RuntimeScope } from '../../oasisQuery/types/searchScope'
 import { ContractName } from '../../contractsConfig/types'
-import { isDbConfigured, db } from '../../config/db.client'
+import { supabase } from '../../config/supabase.config'
 import { ensureUserIdExist } from './ensureUsersId'
-import { getEventArgAsString } from '../../utils/getContractsEventArgs'
-import { sanitizeForDb } from '../../utils/bigInt'
-import { getEventArg } from '../../utils/eventArgs'
+import { getEventArgAsString, getEventArgAsBoolean, DecodedContractEvent } from '../../utils/getContractsEventArgs'
 import type { RuntimeEvent } from '../../oasisQuery/oasis-nexus/api'
-
 import type { ExchangeEventType } from '../../contractsConfig/eventSignatures/eventType'
-import { extractTimestamp } from '../../utils/extractTimestamp'
-import { getBoolean } from '../../utils/getBoolean'
-import { Database } from '../../types/dataBase'
+import { timestampToNumber } from '../../utils/timestampToNumber'
+import * as DBTypes from '../../types/dataBase'
 
 /**
  * Handle BoxListed event
@@ -20,7 +15,7 @@ import { Database } from '../../types/dataBase'
  */
 export const handleBoxListed = async (
     scope: RuntimeScope,
-    event: RuntimeEvent,
+    event: DecodedContractEvent<ContractName.EXCHANGE, 'BoxListed'>,
 ): Promise<void> => {
     const boxId = getEventArgAsString(event, 'boxId')
     const userId = getEventArgAsString(event, 'userId')
@@ -28,23 +23,25 @@ export const handleBoxListed = async (
 
     if (!boxId || !userId) return
 
-    const timestamp = extractTimestamp(event)
+    const timestamp = timestampToNumber(event.timestamp)
 
-    const updates = sanitizeForDb({
+    const updates: DBTypes.Box = {
         seller_id: userId,
         listed_timestamp: timestamp,
-    }) as Database['public']['Tables']['boxes']['Update']
+    }
 
     if (acceptedToken) {
         updates.accepted_token = acceptedToken.toLowerCase()
     }
 
-    const { error } = await db.update('boxes', updates, { network: scope.network as 'testnet' | 'mainnet', layer: scope.layer as 'sapphire', id: boxId })
+    const { error } = await (supabase.from('boxes') as any)
+        .update(updates)
+        .eq('id', boxId)
 
     if (error) {
         console.warn(`⚠️  Failed to update box ${boxId} for BoxListed:`, error.message)
     } else {
-        console.log(`✅ Box ${boxId} updated listed_mode: ${updates.listed_mode}, accepted_token: ${updates.accepted_token}, listed_timestamp: ${updates.listed_timestamp}, seller_id: ${updates.seller_id}`)
+        console.log(`Box ${boxId} updated seller_id: ${userId} and listed_timestamp: ${timestamp}`)
     }
 }
 
@@ -56,14 +53,16 @@ const _updateBuyerPurchaseTimestamp = async (
     scope: RuntimeScope,
     boxId: string,
     userId: string,
-    timestamp: string,
+    timestamp: number,
 ): Promise<void> => {
-    const updates = sanitizeForDb({
+    const updates: DBTypes.Box = {
         buyer_id: userId,
         purchase_timestamp: timestamp,
-    }) as Database['public']['Tables']['boxes']['Update']
+    }
 
-    const { error } = await db.update('boxes', updates, { network: scope.network as 'testnet' | 'mainnet', layer: scope.layer as 'sapphire', id: boxId })
+    const { error } = await (supabase.from('boxes') as any)
+        .update(updates)
+        .eq('id', boxId)
 
     if (error) {
         console.warn(`⚠️  Failed to update box ${boxId} buyer_id: ${userId} and purchase_timestamp: ${timestamp}`, error.message)
@@ -74,31 +73,28 @@ const _updateBuyerPurchaseTimestamp = async (
 
 export const handleBoxPurchased = async (
     scope: RuntimeScope,
-    event: RuntimeEvent,
+    event: DecodedContractEvent<ContractName.EXCHANGE, 'BoxPurchased'>,
 ): Promise<void> => {
     const boxId = getEventArgAsString(event, 'boxId')
     const userId = getEventArgAsString(event, 'userId')
 
     if (!boxId || !userId) return
 
-    const timestamp = extractTimestamp(event)
+    const timestamp = timestampToNumber(event.timestamp)
 
-    _updateBuyerPurchaseTimestamp(scope, boxId, userId, timestamp)
+    await _updateBuyerPurchaseTimestamp(scope, boxId, userId, timestamp)
 }
 
 /**
  * Handle BidPlaced event
  * Insert into box_bidders table
- * Note: Primary key of box_bidders table is (network, layer, id, bidder_id)
- * Multiple bids from the same bidder for the same box will only keep one record
- * Note: Assumes box already exists (created by TruthBox contract events), if not exists will be handled by database foreign key constraint
+ * Note: Primary key of box_bidders table is id (boxId-UserId)
  */
 export const handleBidPlaced = async (
     scope: RuntimeScope,
-    event: RuntimeEvent,
+    event: DecodedContractEvent<ContractName.EXCHANGE, 'BidPlaced'>,
 ): Promise<void> => {
     const boxId = getEventArgAsString(event, 'boxId')
-    const timestamp = extractTimestamp(event)
     const userId = getEventArgAsString(event, 'userId')
 
     // Only skip if boxId or userId is undefined (0 is a valid value)
@@ -106,30 +102,26 @@ export const handleBidPlaced = async (
         console.warn(`⚠️  BidPlaced event missing boxId or userId:`, { boxId, userId })
         return
     }
-    _updateBuyerPurchaseTimestamp(scope, boxId, userId, timestamp)
+    const timestamp = timestampToNumber(event.timestamp)
+    await _updateBuyerPurchaseTimestamp(scope, boxId, userId, timestamp)
 
     const boxBidderId = `${boxId}-${userId}`
     
-    // Use upsert to handle duplicate bids (ignore on primary key conflict)
-    // Note: id and bidder_id need to be string-formatted numbers (PostgreSQL NUMERIC type)
-    // Note: Assumes box already exists (created by TruthBox contract events), if not exists will be handled by database foreign key constraint
-    const bidderData = sanitizeForDb({
-        network: scope.network as 'testnet' | 'mainnet',
-        layer: scope.layer as 'sapphire',
+    const bidderData: DBTypes.BoxBidder = {
         id: boxBidderId,
         box_id: boxId,
         bidder_id: userId,
-    }) as Database['public']['Tables']['box_bidders']['Insert']
+    }
 
     // First insert bidder record
-    const { error: bidderError } = await db.upsert('box_bidders', bidderData)
+    const { error: bidderError } = await (supabase.from('box_bidders') as any)
+        .upsert(bidderData)
 
     if (bidderError) {
         console.error(`❌ Failed to upsert bidder ${userId} for box ${boxId}:`, bidderError.message)
     } else {
         console.log(`✅ Bidder ${userId} upserted for box ${boxId}`)
     }
-
 }
 
 /**
@@ -138,21 +130,23 @@ export const handleBidPlaced = async (
  */
 export const handleCompleterAssigned = async (
     scope: RuntimeScope,
-    event: RuntimeEvent,
+    event: DecodedContractEvent<ContractName.EXCHANGE, 'CompleterAssigned'>,
 ): Promise<void> => {
     const boxId = getEventArgAsString(event, 'boxId')
     const userId = getEventArgAsString(event, 'userId')
 
     if (!boxId || !userId) return
 
-    const timestamp = extractTimestamp(event)
+    const timestamp = timestampToNumber(event.timestamp)
 
-    const updates = sanitizeForDb({
+    const updates: DBTypes.Box = {
         completer_id: userId,
         complete_timestamp: timestamp,
-    }) as Database['public']['Tables']['boxes']['Update']
+    }
 
-    const { error } = await db.update('boxes', updates, { network: scope.network as 'testnet' | 'mainnet', layer: scope.layer as 'sapphire', id: boxId })
+    const { error } = await (supabase.from('boxes') as any)
+        .update(updates)
+        .eq('id', boxId)
 
     if (error) {
         console.warn(`⚠️  Failed to update box ${boxId} for CompleterAssigned:`, error.message)
@@ -167,18 +161,20 @@ export const handleCompleterAssigned = async (
  */
 export const handleRequestDeadlineChanged = async (
     scope: RuntimeScope,
-    event: RuntimeEvent,
+    event: DecodedContractEvent<ContractName.EXCHANGE, 'RequestDeadlineChanged'>,
 ): Promise<void> => {
     const boxId = getEventArgAsString(event, 'boxId')
     const deadline = getEventArgAsString(event, 'deadline')
 
     if (!boxId || !deadline) return
 
-    const updates = sanitizeForDb({
-        request_refund_deadline: deadline,
-    }) as Database['public']['Tables']['boxes']['Update']
+    const updates: DBTypes.Box = {
+        request_refund_deadline: Number(deadline),
+    }
 
-    const { error } = await db.update('boxes', updates, { network: scope.network as 'testnet' | 'mainnet', layer: scope.layer as 'sapphire', id: boxId })
+    const { error } = await (supabase.from('boxes') as any)
+        .update(updates)
+        .eq('id', boxId)
 
     if (error) {
         console.warn(`⚠️  Failed to update box ${boxId} for RequestDeadlineChanged:`, error.message)
@@ -188,28 +184,30 @@ export const handleRequestDeadlineChanged = async (
 }
 
 /**
- * Handle ReviewDeadlineChanged event
- * Update boxes table: review_deadline
+ * Handle ArbitrationDeadineChanged event (ReviewDeadlineChanged)
+ * Update boxes table: arbitration_deadline
  */
 export const handleReviewDeadlineChanged = async (
     scope: RuntimeScope,
-    event: RuntimeEvent,
+    event: DecodedContractEvent<ContractName.EXCHANGE, 'ArbitrationDeadineChanged'>,
 ): Promise<void> => {
     const boxId = getEventArgAsString(event, 'boxId')
     const deadline = getEventArgAsString(event, 'deadline')
 
     if (!boxId || !deadline) return
 
-    const updates = sanitizeForDb({
-        review_deadline: deadline,
-    }) as Database['public']['Tables']['boxes']['Update']
+    const updates: DBTypes.Box = {
+        arbitration_deadline: Number(deadline),
+    }
 
-    const { error } = await db.update('boxes', updates, { network: scope.network as 'testnet' | 'mainnet', layer: scope.layer as 'sapphire', id: boxId })
+    const { error } = await (supabase.from('boxes') as any)
+        .update(updates)
+        .eq('id', boxId)
 
     if (error) {
-        console.warn(`⚠️  Failed to update box ${boxId} for ReviewDeadlineChanged:`, error.message)
+        console.warn(`⚠️  Failed to update box ${boxId} for ArbitrationDeadineChanged:`, error.message)
     } else {
-        console.log(`✅ Box ${boxId} updated review_deadline: ${deadline}`)
+        console.log(`✅ Box ${boxId} updated arbitration_deadline: ${deadline}`)
     }
 }
 
@@ -219,20 +217,20 @@ export const handleReviewDeadlineChanged = async (
  */
 export const handleRefundPermitChanged = async (
     scope: RuntimeScope,
-    event: RuntimeEvent,
+    event: DecodedContractEvent<ContractName.EXCHANGE, 'RefundPermitChanged'>,
 ): Promise<void> => {
     const boxId = getEventArgAsString(event, 'boxId')
     if (!boxId) return
 
-    // permission is a boolean value, get directly from event parameters
-    const permissionRaw = getEventArg<unknown>(event, 'permission')
-    const permission = getBoolean(permissionRaw, boxId)
+    const permission = getEventArgAsBoolean(event, 'permission')
 
-    const updates = sanitizeForDb({
+    const updates: DBTypes.Box = {
         refund_permit: permission,
-    }) as Database['public']['Tables']['boxes']['Update']
+    }
 
-    const { error } = await db.update('boxes', updates, { network: scope.network as 'testnet' | 'mainnet', layer: scope.layer as 'sapphire', id: boxId })
+    const { error } = await (supabase.from('boxes') as any)
+        .update(updates)
+        .eq('id', boxId)
 
     if (error) {
         console.warn(`⚠️  Failed to update box ${boxId} for RefundPermitChanged:`, error.message)
@@ -246,23 +244,17 @@ export const handleRefundPermitChanged = async (
  * Internal Priority (per rules.md):
  * 1. BoxListed
  * 2. BoxPurchased, BidPlaced
- * 3. Others (CompleterAssigned, RequestDeadlineChanged, ReviewDeadlineChanged, RefundPermitChanged)
+ * 3. Others (CompleterAssigned, RequestDeadlineChanged, ArbitrationDeadineChanged, RefundPermitChanged)
  */
 export const persistExchangeSync = async (
     scope: RuntimeScope,
     contract: ContractName,
     events: RuntimeEvent[],
 ): Promise<void> => {
-    if (!isDbConfigured()) {
-        console.warn('⚠️  Database URL / secret not configured, skipping database write')
-        return
-    }
-
     if (contract !== ContractName.EXCHANGE) return 
 
     // ✅ First ensure users records exist (process userId from all events)
     await ensureUserIdExist(scope, events)
-
 
     const getPriority = (eventName: ExchangeEventType): number => {
         if (eventName === 'BoxListed') return 1
@@ -281,31 +273,29 @@ export const persistExchangeSync = async (
     console.log(`📝 Processing Exchange events with priority sorting...`)
 
     for (const event of sortedEvents) {
-        const eventName = event.evm_log_name as ExchangeEventType
+        const eventName = event.evm_log_name
         switch (eventName) {
             case 'BoxListed':
-                await handleBoxListed(scope, event)
+                await handleBoxListed(scope, event as DecodedContractEvent<ContractName.EXCHANGE, 'BoxListed'>)
                 break
             case 'BoxPurchased':
-                await handleBoxPurchased(scope, event)
+                await handleBoxPurchased(scope, event as DecodedContractEvent<ContractName.EXCHANGE, 'BoxPurchased'>)
                 break
             case 'BidPlaced':
-                await handleBidPlaced(scope, event)
+                await handleBidPlaced(scope, event as DecodedContractEvent<ContractName.EXCHANGE, 'BidPlaced'>)
                 break
             case 'CompleterAssigned':
-                await handleCompleterAssigned(scope, event)
+                await handleCompleterAssigned(scope, event as DecodedContractEvent<ContractName.EXCHANGE, 'CompleterAssigned'>)
                 break
             case 'RequestDeadlineChanged':
-                await handleRequestDeadlineChanged(scope, event)
+                await handleRequestDeadlineChanged(scope, event as DecodedContractEvent<ContractName.EXCHANGE, 'RequestDeadlineChanged'>)
                 break
             case 'ArbitrationDeadineChanged':
-                await handleReviewDeadlineChanged(scope, event)
+                await handleReviewDeadlineChanged(scope, event as DecodedContractEvent<ContractName.EXCHANGE, 'ArbitrationDeadineChanged'>)
                 break
             case 'RefundPermitChanged':
-                await handleRefundPermitChanged(scope, event)
+                await handleRefundPermitChanged(scope, event as DecodedContractEvent<ContractName.EXCHANGE, 'RefundPermitChanged'>)
                 break
         }
     }
 }
-
-

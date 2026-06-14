@@ -1,11 +1,9 @@
 import type { RuntimeScope } from '../../oasisQuery/types/searchScope'
 import { ContractName } from '../../contractsConfig/types'
-import { isDbConfigured, db } from '../../config/db.client'
-import { Database } from '../../types/dataBase'
-import { getEventArgAsString } from '../../utils/getContractsEventArgs'
+import { supabase } from '../../config/supabase.config'
+import * as DBTypes from '../../types/dataBase'
+import { getEventArgAsString, DecodedContractEvent } from '../../utils/getContractsEventArgs'
 import type { RuntimeEvent } from '../../oasisQuery/oasis-nexus/api'
-import type { UserManagerEventType } from '../../contractsConfig/eventSignatures/eventType'
-
 
 /**
  * Handle Blacklisted event
@@ -14,7 +12,7 @@ import type { UserManagerEventType } from '../../contractsConfig/eventSignatures
  */
 export const handleBlacklisted = async (
     scope: RuntimeScope,
-    event: RuntimeEvent,
+    event: DecodedContractEvent<ContractName.USER_MANAGER, 'Blacklisted'>,
 ): Promise<void> => {
     const user = getEventArgAsString(event, 'user')
     const status = getEventArgAsString(event, 'status')
@@ -31,14 +29,12 @@ const _updateAddressBlacklist = async (
     address: string,
     isBlacklisted: boolean,
 ): Promise<void> => {
-    const addressData = {
-        network: scope.network as 'testnet' | 'mainnet',
-        layer: scope.layer as 'sapphire',
+    const addressData: DBTypes.UserAddress = {
         id: address.toLowerCase(),
         is_blacklisted: isBlacklisted,
-    } as Database['user_addresses']
+    }
 
-    const { error } = await db.upsert('user_addresses', addressData)
+    const { error } = await (supabase.from('user_addresses') as any).upsert(addressData)
 
     if (error) {
         console.warn(`⚠️  Failed to update blacklist status for user ${address}:`, error.message)
@@ -55,19 +51,13 @@ export const persistUserManagerSync = async (
     contract: ContractName,
     events: RuntimeEvent[],
 ): Promise<void> => {
-    if (!isDbConfigured()) {
-        console.warn('⚠️  Database URL / secret not configured, skipping database write')
-        return
-    }
-
     if (contract !== ContractName.USER_MANAGER) return 
 
     // Process all events
     for (const event of events) {
-        const eventName = event.evm_log_name as UserManagerEventType
+        const eventName = event.evm_log_name
         if (eventName === 'Blacklisted') {
-            await handleBlacklisted(scope, event)
+            await handleBlacklisted(scope, event as DecodedContractEvent<ContractName.USER_MANAGER, 'Blacklisted'>)
         }
     }
 }
-

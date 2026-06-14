@@ -129,28 +129,28 @@ export interface SyncStatus {
 // 10. payments table
 // ============================================
 export interface Payment {
-  id?: string; // Transaction hash - log index
-  box_id?: string;
-  user_id?: string;
-  pay_type?: 'OrderAmount' | 'DelayFee';
-  token?: string;
-  amount?: string;
-  timestamp?: number;
-  transaction_hash?: string;
+  id: string; // Transaction hash - log index
+  box_id: string;
+  user_id: string;
+  pay_type: 'OrderAmount' | 'DelayFee';
+  token: string;
+  amount: string;
+  timestamp: number;
+  transaction_hash: string;
 }
 
 // ============================================
 // 11. order_refund_withdraws table
 // ============================================
 export interface OrderRefundWithdraw {
-  id?: string; // eventName-withdrawType-Transaction hash
-  token?: string;
-  box_id_list?: string[]; // Native array in PG
-  user_id?: string;
-  withdraw_type?: 'Order' | 'Refund';
-  amount?: string;
-  timestamp?: number;
-  transaction_hash?: string;
+  id: string; // eventName-withdrawType-Transaction hash
+  token: string;
+  box_id_list: string[]; // Native array in PG
+  user_id: string;
+  withdraw_type: 'Order' | 'Refund';
+  amount: string;
+  timestamp: number;
+  transaction_hash: string;
 }
 
 // ============================================
@@ -168,13 +168,13 @@ export interface BoxUserOrderAmount {
 // 13. rewards_addeds table
 // ============================================
 export interface RewardsAdded {
-  id?: string; // eventName-reward_added-Transaction hash
-  box_id?: string;
-  user_id?: string;
-  token?: string;
-  amount?: string;
-  timestamp?: number;
-  transaction_hash?: string;
+  id: string; // eventName-reward_added-Transaction hash
+  box_id: string;
+  user_id: string;
+  token: string;
+  amount: string;
+  timestamp: number;
+  transaction_hash: string;
 }
 
 // ============================================

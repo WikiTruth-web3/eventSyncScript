@@ -8,7 +8,7 @@
 
 - **Runtime**: Node.js 20+, TypeScript, tsx
 - **链交互**: `viem`, `@oasisprotocol/client`, Oasis Nexus API
-- **数据库**: Supabase (PostgreSQL) via `@supabase/supabase-js`
+- **数据库**: Supabase (PostgreSQL) via 官方 `@supabase/supabase-js` 客户端进行数据操作（已彻底弃用自定义废弃的 `db.client`）
 - **IPFS**: 多网关自动降级（Pinata, ipfs.io, Cloudflare, dweb.link 等）
 - **CI**: GitHub Actions（已禁用）
 
@@ -24,7 +24,7 @@ src/
 │
 ├── sync-engine/                # 同步引擎（核心基础设施）
 │   ├── events/                 #   区块事件抓取（Oasis Nexus API）
-│   ├── state/                  #   同步游标管理（Supabase sync_status 表）
+│   ├── state/                  #   同步游标管理（Supabase sync_status 表，基于单网普通合约名游标）
 │   └── sync/                   #   同步编排（游标→抓取→返回结果）
 │
 ├── scripts/                    # 按合约的同步脚本（fetch + 解码 + 持久化）
@@ -35,8 +35,9 @@ src/
 │
 ├── utils/                      # 工具函数
 │   ├── decodeEvents.ts         #   合约事件解码（ABI解码，移除 body）
-│   ├── bigInt.ts               #   BigInt 序列化
+│   ├── bigInt.ts               #   BigInt 转换（主要提供大数清洗）
 │   ├── fetchWithProxy.ts       #   代理请求工具
+│   ├── timestampToNumber.ts    #   安全时间戳转换工具（ISO 8601 → 秒级 Unix 时间戳）
 │   └── ipfsUrl/                #   IPFS CID → 网关 URL 转换（多网关自动降级）
 │
 ├── dev-tools/                  # 开发者工具（本地调试用）
@@ -88,7 +89,7 @@ index.ts
 
 | 表 | 写入场景 |
 |---|---|
-| `sync_status` | 同步游标（network/contract → last_block） |
+| `sync_status` | 同步游标（contract_name → last_block，当前仅同步 sapphire testnet，无需多网前缀及兼容回退） |
 | `boxes` | BoxCreated 创建，后续事件更新字段 |
 | `metadata_boxes` | IPFS 元数据 (BoxCreated) |
 | `users` | 从事件 userId 自动 ensure 存在 |
@@ -116,6 +117,11 @@ index.ts
 ### 事件解码（`utils/decodeEvents.ts`）
 BlindBox/Exchange/FundManager 使用代理模式，事件非标准，无法被 Oasis Nexus 自动解码。通过 `contractsConfig/eventSignatures/events.ts` 中配置的事件签名，使用 ABI 手动解码原始事件参数。解码后自动移除 `body` 字段以减小数据体积。
 
+### 合约事件参数约束（`utils/getContractsEventArgs.ts`）
+该模块使用 TypeScript 条件类型（Conditional Types）实现了全自动的强类型防错校验。通过自定义的 `GetEventArgs<Event>` 工具类型直接读取 `event` 自身的强类型签名（`DecodedContractEvent`），来自动锁定并约束提取参数的 `key`（如 `boxId`、`price` 等）。
+- **免写泛型**：在外部调用时，开发者不需要为提取函数（如 `getEventArgAsString`）手写任何泛型，即可获得对参数名拼写的红线校验。一旦发生笔误（如拼错成 `'boxIdssssss'`），TS 编译器会在编译期当场红线报错。
+- **精准类型安全**：`getEventArgValue` 的返回值会被精准推导为对应的字段类型（如 `bigint`、`string` 等），而不是宽泛的 `any`，为各 Writer 写入数据提供了编译期最大程度的安全保护。
+
 ### 事件数据保存为 JSON（`dev-tools/saveEventDataToFile.ts`）
 当环境变量 `EVENT_SYNC_SAVE_JSON=true` 时，每次拉取的原始事件数据会保存到 `data/rawEvents/` 目录作为 JSON 文件，便于离线调试和问题排查。
 
@@ -125,7 +131,7 @@ BlindBox/Exchange/FundManager 使用代理模式，事件非标准，无法被 O
 ## 特殊处理
 
 - **Nexus 倒序**：Oasis Nexus 返回事件按 blockNumber 倒序，需翻转后再写入
-- **BigInt 序列化**：所有 BigInt 在写入 Supabase 前转为字符串
+- **大数处理**：所有 `uint256` 等大数（如 `boxId`、`price`）在事件参数提取的最源头（通过 `getEventArgAsString`）直接被转换为 `string`。时间戳与其它属性也已被提前转换为 `number`。因此，写入数据库的实体对象中 100% 杜绝了原生的 `bigint` 变量，避开了 JSON 序列化 BigInt 的报错，并移除了已无必要的 `sanitizeForDb` 递归对象转换。
 
 ## 配置
 
