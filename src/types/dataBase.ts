@@ -88,7 +88,7 @@ export interface MetadataBox {
 // 6. box_status_statistical table
 // ============================================
 export interface BoxStatusStatistical {
-  id?: string; // Singleton ID
+  id: 'box_status_statistical'; // Singleton ID
   total_supply?: string;
   status_0_supply?: string;
   status_1_supply?: string;
@@ -104,7 +104,7 @@ export interface BoxStatusStatistical {
 // 7. fund_manager_state table
 // ============================================
 export interface FundManagerState {
-  id?: string; // Singleton ID
+  id: 'fundManager'; // Singleton ID
   paused?: boolean;
 }
 
@@ -112,7 +112,7 @@ export interface FundManagerState {
 // 8. forwarder_state table
 // ============================================
 export interface ForwarderState {
-  id?: string; // Singleton ID
+  id: 'forwarder'; // Singleton ID
   paused?: boolean;
 }
 

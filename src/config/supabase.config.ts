@@ -7,6 +7,12 @@ const supabaseConfig = {
     serviceRoleKey: process.env.SUPABASE_SERVICE_ROLE_KEY || '',
 };
 
+// console.log('--- supabaseConfig init ---');
+// console.log('SUPABASE_URL:', supabaseConfig.url ? 'defined' : 'empty');
+// console.log('SUPABASE_ANON_KEY:', supabaseConfig.anonKey ? 'defined' : 'empty');
+// console.log('SUPABASE_SERVICE_ROLE_KEY:', supabaseConfig.serviceRoleKey ? 'defined' : 'empty');
+
+
 if (!supabaseConfig.url || !supabaseConfig.anonKey) {
     throw new Error('Missing Supabase configuration, please check environment variables SUPABASE_URL and SUPABASE_ANON_KEY');
 }
@@ -33,7 +39,10 @@ export function createSupabaseServiceClient(): SupabaseClient<SupabaseDatabase> 
     });
 }
 
-export const supabase: SupabaseClient<SupabaseDatabase> = createSupabaseClient();
+export const supabase: SupabaseClient<SupabaseDatabase> = supabaseConfig.serviceRoleKey
+    ? createSupabaseServiceClient()
+    : createSupabaseClient();
+
 
 export interface SupabaseDatabase {
     public: {
