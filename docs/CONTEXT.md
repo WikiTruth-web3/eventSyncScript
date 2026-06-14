@@ -35,11 +35,6 @@ src/
 │
 ├── utils/                      # 工具函数
 │   ├── decodeEvents.ts         #   合约事件解码（ABI解码，移除 body）
-│   ├── fixEventsErrorParam.ts  #   错误事件参数修正
-│   ├── eventArgs.ts            #   安全提取事件参数
-│   ├── extractTimestamp.ts     #   区块时间戳提取
-│   ├── generateId.ts           #   记录唯一 ID 生成
-│   ├── getBoolean.ts           #   布尔值健壮转换
 │   ├── bigInt.ts               #   BigInt 序列化
 │   ├── fetchWithProxy.ts       #   代理请求工具
 │   └── ipfsUrl/                #   IPFS CID → 网关 URL 转换（多网关自动降级）
@@ -47,9 +42,7 @@ src/
 ├── dev-tools/                  # 开发者工具（本地调试用）
 │   ├── saveEventDataToFile.ts  #   拉取到的原始事件保存为 JSON 文件
 │   ├── downloadIpfsFile.ts     #   手动下载 IPFS 文件到本地
-│   ├── decodeEventsExample.ts  #   事件解码示例脚本
 │   ├── checkDecode.ts          #   解码结果验证工具
-│   └── processFile.ts          #   本地文件处理工具
 │
 └── oasisQuery/                 # Oasis Nexus API SDK（封装链上查询接口）
 ```
@@ -59,7 +52,7 @@ src/
 `src/index.ts` → 读取 `src/controller.ts` 配置 → 按合约顺序执行同步。
 
 控制器字段：
-- `writeToSupabase` — 是否写入数据库
+- `writeToDatabase` — 是否写入数据库
 - `restart` — 是否忽略已有同步进度，从头开始
 - `isUpdateLastBlock` — 是否更新游标
 - `queryList` — 要同步的合约列表
@@ -90,7 +83,6 @@ index.ts
 | **FundManager** | Payment, OrderAmountWithdraw, RefundAmountWithdraw, RewardAdded, RewardWithdraw | 支付处理、奖励分发 |
 | **UserManager** | Blacklisted | 用户黑名单 |
 | **Forwarder** | Paused, Unpaused | 代理合约暂停状态 |
-<!-- | **BoxNFT** | Transfer（暂不活跃） | NFT 所有权 | -->
 
 ## 数据库表
 
@@ -103,12 +95,13 @@ index.ts
 | `user_addresses` | 用户地址 + 黑名单状态 |
 | `box_bidders` | BidPlaced |
 | `payments` | Payment |
-| `withdraws` | OrderAmountWithdraw / RewardWithdraw |
+| `order_refund_withdraws` | OrderAmountWithdraw / RefundAmountWithdraw |
+| `rewards_withdraws` | RewardWithdraw |
 | `rewards_addeds` | RewardAdded |
 | `fund_manager_state` | Paused / Unpaused |
 | `forwarder_state` | Paused / Unpaused |
 
-*由数据库触发器自动维护的衍生表：`box_rewards`, `user_rewards`, `user_withdraws`, `box_user_order_amounts`, `statistical_state`, `token_total_amounts`*
+*由数据库触发器自动维护的衍生表：`box_rewards`, `user_rewards`, `box_user_order_amounts`, `box_status_statistical`, `token_total_amounts`*
 
 ## 写入顺序约束（依赖关系）
 

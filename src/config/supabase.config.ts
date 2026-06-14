@@ -11,8 +11,8 @@ if (!supabaseConfig.url || !supabaseConfig.anonKey) {
     throw new Error('Missing Supabase configuration, please check environment variables SUPABASE_URL and SUPABASE_ANON_KEY');
 }
 
-export function createSupabaseClient(): SupabaseClient<Database> {
-    return createClient<Database>(supabaseConfig.url, supabaseConfig.anonKey, {
+export function createSupabaseClient(): SupabaseClient<SupabaseDatabase> {
+    return createClient<SupabaseDatabase>(supabaseConfig.url, supabaseConfig.anonKey, {
         auth: {
             persistSession: true,
             autoRefreshToken: true,
@@ -20,12 +20,12 @@ export function createSupabaseClient(): SupabaseClient<Database> {
     });
 }
 
-export function createSupabaseServiceClient(): SupabaseClient<Database> {
+export function createSupabaseServiceClient(): SupabaseClient<SupabaseDatabase> {
     if (!supabaseConfig.serviceRoleKey) {
         throw new Error('Missing SUPABASE_SERVICE_ROLE_KEY, cannot create service client');
     }
 
-    return createClient<Database>(supabaseConfig.url, supabaseConfig.serviceRoleKey, {
+    return createClient<SupabaseDatabase>(supabaseConfig.url, supabaseConfig.serviceRoleKey, {
         auth: {
             persistSession: false,
             autoRefreshToken: false,
@@ -33,9 +33,9 @@ export function createSupabaseServiceClient(): SupabaseClient<Database> {
     });
 }
 
-export const supabase = createSupabaseClient();
+export const supabase: SupabaseClient<SupabaseDatabase> = createSupabaseClient();
 
-export interface Database {
+export interface SupabaseDatabase {
     public: {
         Tables: {
             boxes: {
@@ -120,8 +120,8 @@ export interface Database {
             };
             sync_status: {
                 Row: DBTypes.SyncStatus;
-                Insert: Partial<DBTypes.SyncStatus> & Pick<DBTypes.SyncStatus, 'contract_name'>;
-                Update: Partial<DBTypes.SyncStatus>;
+                Insert: DBTypes.SyncStatus;
+                Update: DBTypes.SyncStatus;
             };
         };
         Functions: {

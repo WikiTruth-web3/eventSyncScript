@@ -100,7 +100,6 @@ Environment variable loading priority (from highest to lowest):
 
 Located in `src/local/` directory:
 
-- `decodeEventsExample.ts` - Event decoding example
 - `downloadIpfsFile.ts` - IPFS file download tool
 
 Run with:

@@ -7,8 +7,6 @@ import type { MetadataBoxPayload } from '../ipfs/fetchMetadataBox'
 // Removed V2_BLOCK_THRESHOLD and v1 conversion logic as per user request to only keep v2.
 
 type MetadataRecord = {
-  network: 'testnet' | 'mainnet'
-  layer: 'sapphire'
   id: string
   type_of_crime?: string
   label?: string[]
@@ -70,8 +68,6 @@ const normalizeMetadataRecord = (
     : null
 
   return {
-    network: scope.network as 'testnet' | 'mainnet',
-    layer: scope.layer as 'sapphire',
     id: boxId,
     type_of_crime: metadata.type_of_crime,
     label: metadata.label,

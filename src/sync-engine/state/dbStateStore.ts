@@ -3,68 +3,74 @@
  * Used in production environment (GitHub Actions), replacing local file system storage
  */
 
-import { db } from '../../config/db.client'
+import { supabase } from '../../config/supabase.config'
 import type { ContractSyncKey, SyncCursor } from './types'
 import type { RuntimeScope } from '../../oasisQuery/types/searchScope'
 import { ContractName } from '../../contractsConfig/types'
 import { TESTNET_ADDRESSES, MAINNET_ADDRESSES } from '../../contractsConfig/contracts'
-import { SYNC_STATE_CONFIG } from '../../config/sync'
+import { SYNC_STATE_CONFIG, DEFAULT_SCOPE } from '../../config/sync'
 
 export interface SyncStatusData {
   last_synced_block: number
   last_synced_at: string | null
 }
 
-const getFallbackStartBlock = (network: string, contract: ContractName): number => {
+const getFallbackStartBlock = (contract: ContractName): number => {
+  const network = DEFAULT_SCOPE.network
   const addresses = network === 'testnet' ? TESTNET_ADDRESSES : MAINNET_ADDRESSES
   return addresses[contract]?.startBlock ?? SYNC_STATE_CONFIG.DEFAULT_START_BLOCK
 }
 
 /**
- * Read sync status from D1 sync_status table
- * Note: The sync_status table in D1 is stored by network/layer/contract_name, each contract has its own sync status
+ * Read sync status from Supabase sync_status table
  */
 export const getSyncCursor = async (key: ContractSyncKey): Promise<SyncCursor> => {
   try {
-    const { data, error } = await db.getSyncStatus(key.network, key.layer, key.contract)
+    const { data, error } = await supabase
+      .from('sync_status')
+      .select('*')
+      .eq('contract_name', key.contract)
+      .single()
 
     if (error) {
       // If record does not exist, return default value
       if (error.code === 'PGRST116') {
         return {
-          lastBlock: getFallbackStartBlock(key.network, key.contract),
+          lastBlock: getFallbackStartBlock(key.contract),
         }
       }
-      console.warn(`⚠️  Failed to read D1 sync status:`, error.message)
+      console.warn(`⚠️  Failed to read Supabase sync status:`, error.message)
       return {
-        lastBlock: getFallbackStartBlock(key.network, key.contract),
+        lastBlock: getFallbackStartBlock(key.contract),
       }
     }
 
     if (!data) {
       return {
-        lastBlock: getFallbackStartBlock(key.network, key.contract),
+        lastBlock: getFallbackStartBlock(key.contract),
       }
     }
 
+    // @ts-ignore - Avoid TS instantiation depth errors triggered by viem/supabase
     return {
-      lastBlock: Number(data.last_synced_block) || getFallbackStartBlock(key.network, key.contract),
+      // @ts-ignore
+      lastBlock: data.last_synced_block !== null && data.last_synced_block !== undefined ? Number(data.last_synced_block) : getFallbackStartBlock(key.contract),
+      // @ts-ignore
       lastTimestamp: data.last_synced_at || undefined,
     }
   } catch (error) {
     console.warn(
-      `⚠️  Failed to read D1 sync status:`,
+      `⚠️  Failed to read Supabase sync status:`,
       error instanceof Error ? error.message : String(error),
     )
     return {
-      lastBlock: getFallbackStartBlock(key.network, key.contract),
+      lastBlock: getFallbackStartBlock(key.contract),
     }
   }
 }
 
 /**
- * Update sync status of D1 sync_status table (accept RuntimeScope and contract name)
- * Used in main entry file, update sync status of specific contract
+ * Update sync status of Supabase sync_status table
  */
 export const updateSyncStatus = async (
   scope: RuntimeScope,
@@ -72,24 +78,19 @@ export const updateSyncStatus = async (
   lastBlock: number,
 ): Promise<void> => {
   try {
-    const { error } = await db.upsert(
-      'sync_status',
-      {
-        network: scope.network as 'testnet' | 'mainnet',
-        layer: scope.layer as 'sapphire',
-        contract_name: contract,
-        last_synced_block: lastBlock.toString(),
-        last_synced_at: new Date().toISOString(),
-      }
-    )
+    const { error } = await (supabase.from('sync_status') as any).upsert({
+      contract_name: contract,
+      last_synced_block: lastBlock,
+      last_synced_at: new Date().toISOString(),
+    })
 
     if (error) {
-      console.warn(`⚠️  Failed to update D1 sync status:`, error.message)
+      console.warn(`⚠️  Failed to update Supabase sync status:`, error.message)
       throw error
     }
   } catch (error) {
     console.warn(
-      `⚠️  Failed to update D1 sync status:`,
+      `⚠️  Failed to update Supabase sync status:`,
       error instanceof Error ? error.message : String(error),
     )
     // Do not throw error, allow continue execution
@@ -97,7 +98,7 @@ export const updateSyncStatus = async (
 }
 
 /**
- * Read sync status data from D1 (compatible with old interface)
+ * Read sync status data from Supabase
  * @param scope - Runtime scope (network and layer)
  * @param contract - Contract name
  * @returns Sync status data, if not exists, return null
@@ -107,7 +108,11 @@ export const getCurrentDbData = async (
   contract: ContractName,
 ): Promise<SyncStatusData | null> => {
   try {
-    const { data, error } = await db.getSyncStatus(scope.network, scope.layer, contract)
+    const { data, error } = await supabase
+      .from('sync_status')
+      .select('*')
+      .eq('contract_name', contract)
+      .single()
 
     if (error) {
       // If record does not exist, return null (will be handled by caller)
@@ -121,12 +126,15 @@ export const getCurrentDbData = async (
       return null
     }
 
+    // @ts-ignore - Avoid TS instantiation depth errors triggered by viem/supabase
     return {
-      last_synced_block: Number(data.last_synced_block) || 0,
+      // @ts-ignore
+      last_synced_block: data.last_synced_block !== null && data.last_synced_block !== undefined ? Number(data.last_synced_block) : 0,
+      // @ts-ignore
       last_synced_at: data.last_synced_at,
     }
   } catch (error) {
-    console.error('❌ Failed to read D1 sync status:', error)
+    console.error('❌ Failed to read Supabase sync status:', error)
     throw error
   }
 }
@@ -140,10 +148,12 @@ export const getAllContractsSyncData = async (
   scope: RuntimeScope,
 ): Promise<Record<ContractName, SyncStatusData | null>> => {
   try {
-    const { data, error } = await db.getSyncStatus(scope.network, scope.layer)
+    const { data, error } = await supabase
+      .from('sync_status')
+      .select('*')
 
     if (error) {
-      console.error('❌ Failed to read D1 sync status:', error)
+      console.error('❌ Failed to read Supabase sync status:', error)
       throw error
     }
 
@@ -155,16 +165,20 @@ export const getAllContractsSyncData = async (
       [ContractName.FUND_MANAGER]: null,
       [ContractName.USER_MANAGER]: null,
       [ContractName.ADDRESS_MANAGER]: null,
-      [ContractName.SIWE_AUTH]: null,
+      // [ContractName.SIWE_AUTH]: null,
     }
 
     // Fill data read from database
+    // @ts-ignore - Avoid TS instantiation depth errors triggered by viem/supabase
     if (data && Array.isArray(data)) {
       for (const item of data) {
+        // @ts-ignore
         const contractName = item.contract_name as ContractName
         if (contractName in result) {
           result[contractName] = {
-            last_synced_block: Number(item.last_synced_block) || 0,
+            // @ts-ignore
+            last_synced_block: item.last_synced_block !== null && item.last_synced_block !== undefined ? Number(item.last_synced_block) : 0,
+            // @ts-ignore
             last_synced_at: item.last_synced_at,
           }
         }
@@ -173,7 +187,7 @@ export const getAllContractsSyncData = async (
 
     return result
   } catch (error) {
-    console.error('❌ Failed to read D1 sync status:', error)
+    console.error('❌ Failed to read Supabase sync status:', error)
     throw error
   }
 }
@@ -182,10 +196,10 @@ export const getStartBlockHeight = async (
   scope: RuntimeScope,
   contract: ContractName,
 ): Promise<number> => {
-  const syncStatus = await getCurrentDbData(scope, contract)
+  const syncStatus = await getCurrentDbData( scope, contract)
 
-  if (syncStatus && syncStatus.last_synced_block > 0) {
-    // Use last_synced_block + 1 from D1
+  if (syncStatus && syncStatus.last_synced_block !== null && syncStatus.last_synced_block !== undefined && syncStatus.last_synced_block >= 0) {
+    // Use last_synced_block + 1
     return syncStatus.last_synced_block + 1
   }
 

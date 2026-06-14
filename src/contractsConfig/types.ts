@@ -8,7 +8,8 @@ export enum ContractName {
   FUND_MANAGER = 'FUND_MANAGER',
   USER_MANAGER = 'USER_MANAGER',
   
-  SIWE_AUTH = 'SIWE_AUTH',
+  // SIWE_AUTH = 'SIWE_AUTH',
+  // BOX_NFT = 'BOX_NFT',
 }
 
 

@@ -1,9 +1,9 @@
 import type { ContractName } from '../../contractsConfig/types'
-import type { RuntimeScope } from '../../oasisQuery/types/searchScope'
+// import type { RuntimeScope } from '../../oasisQuery/types/searchScope'
 
 export interface ContractSyncKey {
-  network: RuntimeScope['network']
-  layer: RuntimeScope['layer']
+  // network: RuntimeScope['network']
+  // layer: RuntimeScope['layer']
   contract: ContractName
 }
 

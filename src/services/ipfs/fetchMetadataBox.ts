@@ -2,9 +2,8 @@ import { ipfsCidToUrl } from '../../utils/ipfsUrl/ipfsCidToUrl'
 import { refreshGatewayStatus, clearGatewayCache } from '../../utils/ipfsUrl/gateway'
 import { IPFS_CONFIG } from '../../config/ipfs'
 import { fetchWithProxy } from '../../utils/fetchWithProxy'
-import type { MetadataBoxPayload } from '../../utils/metadata/metadataBoxTypes'
+import type { MetadataBoxPayload } from '../../types/metadataBoxTypes'
 
-export type { MetadataBoxPayload }
 
 /**
  * Delay function
